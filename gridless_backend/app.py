@@ -3,6 +3,8 @@ import random
 from datetime import datetime
 from dotenv import load_dotenv
 
+import requests
+
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -111,7 +113,7 @@ def qualify_balcony():
 
 
 # ==========================================
-# ROUTE 2: AUTHENTICATION & PASSWORDLESS OTP
+# ROUTE 2: AUTHENTICATION & BREVO OTP
 # ==========================================
 @app.route("/api/send-otp", methods=["POST"])
 @limiter.limit("5 per minute")
@@ -124,6 +126,7 @@ def send_otp():
         
     otp_code = str(random.randint(100000, 999999))
     
+    # 1. Save or update OTP in Neon DB
     otp_entry = OTP.query.filter_by(email=email).first()
     if not otp_entry:
         otp_entry = OTP(email=email, code=otp_code, expires_at=OTP.generate_expiration())
@@ -134,9 +137,37 @@ def send_otp():
         
     db.session.commit()
     
-    # Print code to terminal console for local testing
-    print(f"[DEV ONLY] OTP for {email}: {otp_code}")
+    # 2. Send email via Brevo REST API
+    brevo_api_key = os.environ.get('BREVO_API_KEY')
+    sender_email = os.environ.get('SENDER_EMAIL', 'jeskojets.system@gmail.com') # Set in Render ENV
     
+    if brevo_api_key:
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api-key": brevo_api_key,
+            "content-type": "application/json"
+        }
+        payload = {
+            "sender": {"name": "GRIDLESS", "email": sender_email},
+            "to": [{"email": email}],
+            "subject": "Your GRIDLESS Verification Code",
+            "htmlContent": f"""
+            <div style="font-family: sans-serif; padding: 20px; color: #1C2321;">
+                <h2>Verify Your Email</h2>
+                <p>Your GRIDLESS site inspection verification code is:</p>
+                <h1 style="color: #B08D57; letter-spacing: 4px;">{otp_code}</h1>
+                <p>This code is valid for 10 minutes.</p>
+            </div>
+            """
+        }
+        try:
+            res = requests.post(url, headers=headers, json=payload)
+            res.raise_for_status()
+        except Exception as e:
+            print(f"[Brevo Error] Could not send email: {e}")
+            
+    print(f"[DEV CONSOLE] OTP for {email}: {otp_code}")
     return jsonify({"message": "OTP sent successfully to email"}), 200
 
 
@@ -145,29 +176,36 @@ def verify_otp():
     data = request.json or {}
     email = data.get("email", "").strip().lower()
     code = data.get("code", "").strip()
-    name = data.get("name", "")
-    phone = data.get("phone", "")
+    name = data.get("name", "").strip()
+    phone = data.get("phone", "").strip()
     
+    if not email or not code:
+        return jsonify({"error": "Email and OTP code are required"}), 400
+    
+    # 1. Verify code against DB
     record = OTP.query.filter_by(email=email, code=code).first()
     if not record or record.expires_at < datetime.utcnow():
         return jsonify({"error": "Invalid or expired OTP"}), 400
         
+    # 2. Create or update User record
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(email=email, name=name, phone=phone)
         db.session.add(user)
-        db.session.commit()
-    
-    db.session.delete(record)
+    else:
+        if name: user.name = name
+        if phone: user.phone = phone
+        
+    db.session.delete(record) # Delete OTP so it cannot be reused
     db.session.commit()
     
+    # 3. Log user into Flask Session (CRITICAL for Razorpay & Booking!)
     session["user_id"] = user.id
     
     return jsonify({
         "message": "Authenticated successfully",
         "user": {"id": user.id, "email": user.email, "name": user.name}
     }), 200
-
 
 # ==========================================
 # ROUTE 3: SITE INSPECTION BOOKING & UPLOADS
@@ -309,6 +347,9 @@ def create_order():
         return jsonify({"order_id": order["id"], "amount": 5000}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
 
 # ==========================================
 # ROUTE 5: GET CURRENT USER & DASHBOARD DATA

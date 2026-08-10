@@ -215,62 +215,99 @@
     document.getElementById("advanceAmount").textContent = "₹" + advance.toLocaleString('en-IN');
   }
 
+ // 1. Send OTP Function
   async function sendOTP() {
-    const email = document.getElementById("userEmail").value;
-    const btn = document.getElementById("sendOtpBtn");
-    btn.textContent = "Sending...";
-    
-    try {
-      await fetch(`${API_BASE}/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email })
-      });
-      document.getElementById("otpSection").style.display = "block";
-      btn.style.display = "none";
-    } catch (err) {
-      alert("Failed to send OTP.");
-      btn.textContent = "Send Secure Code";
-    }
-  }
+    const userEmail = document.getElementById("userEmail").value.trim();
+    const sendBtn = document.getElementById("sendOtpBtn");
 
-  async function verifyOTP() {
-    const payload = {
-      email: document.getElementById("userEmail").value,
-      name: document.getElementById("userName").value,
-      phone: document.getElementById("userPhone").value,
-      code: document.getElementById("otpCode").value
-    };
-    
+    if (!userEmail || !userEmail.includes("@")) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    sendBtn.textContent = "Sending Code...";
+    sendBtn.disabled = true;
+
     try {
-      const res = await fetch(`${API_BASE}/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+      const response = await fetch(`${API_BASE}/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Preserves session cookie
+        body: JSON.stringify({ email: userEmail })
       });
       
-      if (res.ok) {
-        nextStep(5);
+      const data = await response.json();
+      if (response.ok) {
+        alert("OTP sent to your inbox!");
+        document.getElementById("otpSection").style.display = "block";
       } else {
-        alert("Invalid OTP");
+        alert("Error: " + (data.error || "Failed to send OTP"));
       }
     } catch (err) {
-      alert("Verification failed.");
+      alert("Error connecting to backend server.");
+    } finally {
+      sendBtn.textContent = "Resend Code";
+      sendBtn.disabled = false;
     }
   }
 
+  // 2. Verify OTP Function
+  async function verifyOTP() {
+    const userName = document.getElementById("userName").value.trim();
+    const userPhone = document.getElementById("userPhone").value.trim();
+    const userEmail = document.getElementById("userEmail").value.trim();
+    const otpCode = document.getElementById("otpCode").value.trim();
+
+    if (!otpCode) {
+      alert("Please enter the 6-digit OTP code sent to your email.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Preserves session cookie
+        body: JSON.stringify({
+          email: userEmail,
+          code: otpCode,
+          name: userName,
+          phone: userPhone
+        })
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        alert("Identity verified successfully!");
+        nextStep(5); // Automatically move to Step 5 (Payment)
+      } else {
+        alert("Verification Failed: " + (data.error || "Invalid OTP"));
+      }
+    } catch (err) {
+      alert("Error verifying code with server.");
+    }
+  }
+
+  // 3. Razorpay Order & Payment Function
   async function initiatePayment() {
     const btn = document.getElementById("payBtn");
     btn.textContent = "Loading Secure Gateway...";
     
     try {
-      // 1. Create order on backend
-      const orderRes = await fetch(`${API_BASE}/create-order`, { method: "POST" });
+      // Create order on backend (session cookie is sent automatically)
+      const orderRes = await fetch(`${API_BASE}/create-order`, { 
+        method: "POST",
+        credentials: 'include' 
+      });
+      
+      if (!orderRes.ok) {
+        throw new Error("Authentication missing. Please re-verify your OTP.");
+      }
+      
       const orderData = await orderRes.json();
       
-      // 2. Open Razorpay Checkout
       const options = {
-        key: "rzp_live_TNnnwKFqWsfL7e", // Add your Test Key ID here
+        key: "rzp_live_TNnnwKFqWsfL7e",
         amount: orderData.amount,
         currency: "INR",
         name: "GRIDLESS Solar",
@@ -279,7 +316,6 @@
         handler: async function (response) {
           btn.textContent = "Uploading Photos & Finalizing...";
           
-          // 3. Prepare final form data
           const formData = new FormData();
           formData.append("balcony_direction", bookingData.balcony_direction);
           formData.append("balcony_length", bookingData.balcony_length);
@@ -292,21 +328,20 @@
           formData.append("railing_image", document.getElementById("railingPhoto").files[0]);
           formData.append("view_image", document.getElementById("viewPhoto").files[0]);
           
-          // Attach Razorpay details for backend verification
           formData.append("razorpay_payment_id", response.razorpay_payment_id);
           formData.append("razorpay_order_id", response.razorpay_order_id);
           formData.append("razorpay_signature", response.razorpay_signature);
           
-          // 4. Submit to backend
           const bookRes = await fetch(`${API_BASE}/book`, {
             method: "POST",
+            credentials: 'include',
             body: formData
           });
           
           if (bookRes.ok) {
             nextStep('Success');
           } else {
-            alert("Payment recorded, but failed to upload photos. Please contact support.");
+            alert("Payment recorded, but failed to upload booking details. Please contact support.");
           }
         },
         prefill: {
@@ -321,7 +356,7 @@
       rzp.open();
       
     } catch (err) {
-      alert("Could not load payment gateway.");
+      alert(err.message || "Could not load payment gateway.");
       btn.textContent = "Pay ₹50 via UPI/Card";
     }
   }
