@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Booking — GRIDLESS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Razorpay SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<style>
+  :root{
+    --concrete:#E4E0D6; --ink:#1C2321; --dusk:#1B2A4A;
+    --brass:#B08D57; --paper:#F7F5EF; --line: rgba(28,35,33,0.14);
+    --ease: cubic-bezier(.16,.8,.24,1);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--concrete); color:var(--ink);
+    font-family:'Inter', sans-serif; line-height:1.55;
+    display:flex; justify-content:center; align-items:center; min-height:100vh;
+    padding:20px;
+  }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; letter-spacing:-0.02em; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  
+  .booking-card {
+    background: var(--paper); border: 1px solid var(--line);
+    padding: 40px; max-width: 600px; width: 100%; position: relative;
+  }
+  .step { display: none; animation: fadeIn 0.4s var(--ease); }
+  .step.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  
+  .header-tag { font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--brass); text-transform:uppercase; margin-bottom:10px; display:block; }
+  h2 { font-size: 1.8rem; margin-bottom: 24px; font-weight:600; }
+  
+  .kit-option {
+    border: 1px solid var(--line); padding: 20px; margin-bottom: 16px;
+    cursor: pointer; transition: all 0.2s var(--ease);
+  }
+  .kit-option:hover { border-color: var(--brass); }
+  .kit-option.selected { border: 2px solid var(--brass); background: rgba(176,141,87,0.05); }
+  
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; opacity: 0.8;}
+  .form-group input {
+    width: 100%; padding: 12px; border: 1px solid var(--line);
+    background: var(--concrete); font-family: inherit; font-size: 1rem; outline: none;
+  }
+  .form-group input:focus { border-color: var(--brass); }
+  
+  .file-upload {
+    border: 1px dashed var(--line); padding: 30px; text-align: center;
+    background: var(--concrete); cursor: pointer; margin-bottom:16px;
+  }
+  
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px 24px; border-radius:2px; width:100%; border:none;
+    font-size:1rem; font-weight:600; letter-spacing:0.01em; cursor: pointer;
+    transition: transform 0.25s var(--ease), background 0.25s var(--ease);
+  }
+  .btn-brass { background:var(--brass); color:var(--paper); }
+  .btn-brass:hover { background:var(--ink); transform:translateY(-2px); }
+  
+  .info-box {
+    background: var(--dusk); color: var(--paper); padding: 20px;
+    font-size: 0.85rem; margin-bottom: 24px; border-left: 4px solid var(--brass);
+  }
+</style>
+</head>
+<body>
+
+<div class="booking-card">
+  <!-- STEP 1: Select Kit -->
+  <div class="step active" id="step1">
+    <span class="header-tag">Step 1 of 5</span>
+    <h2>Select Your System</h2>
+    <p style="font-size:0.9rem; margin-bottom:20px; opacity:0.8;">Based on your <span id="displayTier" class="mono" style="color:var(--brass);"></span> balcony, choose your setup:</p>
+    
+    <div class="kit-option" onclick="selectKit('Grid-Tied (Bill Reducer)', 42000, this)">
+      <h3 style="font-size:1.2rem;">The Bill Reducer (Grid-Tied)</h3>
+      <p style="font-size:0.85rem; opacity:0.7; margin-top:4px;">Lowers daily electricity bills. No battery.</p>
+      <div class="mono" style="font-weight:600; font-size:1.1rem; margin-top:10px;">₹42,000</div>
+    </div>
+    
+    <div class="kit-option" onclick="selectKit('Hybrid (Blackout Backup)', 52000, this)">
+      <h3 style="font-size:1.2rem;">The Blackout Backup (Hybrid)</h3>
+      <p style="font-size:0.85rem; opacity:0.7; margin-top:4px;">12V Lithium Battery + daily bill reduction.</p>
+      <div class="mono" style="font-weight:600; font-size:1.1rem; margin-top:10px;">₹52,000</div>
+    </div>
+    <p style="font-size:0.75rem; opacity:0.6; margin-bottom:24px;">Note: Final price may vary slightly depending on exact panel dimensions required.</p>
+    <button class="btn btn-brass" onclick="nextStep(2)">Continue to Photos</button>
+  </div>
+
+  <!-- STEP 2: Photos -->
+  <div class="step" id="step2">
+    <span class="header-tag">Step 2 of 5</span>
+    <h2>Balcony Photos</h2>
+    <p style="font-size:0.9rem; margin-bottom:20px; opacity:0.8;">We need to check the railing structure and outside shadows.</p>
+    
+    <div class="form-group">
+      <label>1. Balcony Railing (Close-up)</label>
+      <input type="file" id="railingPhoto" accept="image/*" capture="environment" class="file-upload" required>
+    </div>
+    <div class="form-group">
+      <label>2. Outward View (Looking outside)</label>
+      <input type="file" id="viewPhoto" accept="image/*" capture="environment" class="file-upload" required>
+    </div>
+    <button class="btn btn-brass" onclick="nextStep(3)">Continue to Location</button>
+  </div>
+
+  <!-- STEP 3: Location -->
+  <div class="step" id="step3">
+    <span class="header-tag">Step 3 of 5</span>
+    <h2>Where are we going?</h2>
+    
+    <div class="form-group">
+      <label>Flat / Room Number</label>
+      <input type="text" id="flatNumber" placeholder="e.g. 804, Tower B" required>
+    </div>
+    <div class="form-group">
+      <label>Full Society Address</label>
+      <input type="text" id="fullAddress" placeholder="e.g. Maya Garden, Zirakpur" required>
+    </div>
+    <button class="btn btn-brass" onclick="nextStep(4)">Continue to Details</button>
+  </div>
+
+  <!-- STEP 4: Auth / OTP -->
+  <div class="step" id="step4">
+    <span class="header-tag">Step 4 of 5</span>
+    <h2>Your Details</h2>
+    
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="userName" placeholder="Mohit Sharma" required>
+    </div>
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input type="tel" id="userPhone" placeholder="10-digit mobile number" required>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="userEmail" placeholder="name@example.com" required>
+    </div>
+    
+    <button class="btn btn-brass" id="sendOtpBtn" onclick="sendOTP()">Send Secure Code</button>
+    
+    <div id="otpSection" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--line);">
+      <div class="form-group">
+        <label>Enter 6-Digit OTP</label>
+        <input type="text" id="otpCode" placeholder="000000">
+      </div>
+      <button class="btn btn-brass" onclick="verifyOTP()">Verify & Proceed to Payment</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: Payment & Final Submit -->
+  <div class="step" id="step5">
+    <span class="header-tag">Step 5 of 5</span>
+    <h2>Secure Your Inspection</h2>
+    
+    <div class="info-box">
+      <strong>Transparency Note:</strong><br>
+      Upon successful site inspection and final agreement, a 40% hardware advance will be collected offline before installation. Based on your selection, this advance will be approximately <span id="advanceAmount" class="mono" style="font-weight:600; color:var(--brass-light);"></span>.
+    </div>
+    
+    <p style="font-size:0.9rem; margin-bottom:24px; opacity:0.8;">A fully refundable booking fee of <strong>₹50</strong> is required to lock in your site inspection.</p>
+    
+    <button class="btn btn-brass" id="payBtn" onclick="initiatePayment()">Pay ₹50 via UPI/Card</button>
+  </div>
+  
+  <!-- Success Step -->
+  <div class="step" id="stepSuccess">
+    <span class="header-tag">Confirmed</span>
+    <h2>Booking Successful</h2>
+    <p style="font-size:0.9rem; margin-bottom:24px; opacity:0.8;">Your site inspection is confirmed! Our team will reach your location within the next 1 to 2 days.</p>
+    
+    <a href="#" class="btn btn-brass" style="background:#25D366; color:white;">Chat with Mohit on WhatsApp</a>
+  </div>
+</div>
+
+<script>
+  // API URL - Replace with your actual Ngrok/Render URL
+  const API_BASE = 'http://127.0.0.1:5000/api'; 
+  
+  // Data State
+  let bookingData = {
+    selected_kit: "",
+    price: 0,
+    balcony_direction: sessionStorage.getItem("balcony_direction"),
+    balcony_length: sessionStorage.getItem("balcony_length"),
+    floor_number: sessionStorage.getItem("floor_number"),
+    has_plug: sessionStorage.getItem("has_plug")
+  };
+
+  // On Load
+  document.getElementById("displayTier").textContent = sessionStorage.getItem("recommended_tier") || "Standard";
+
+  function nextStep(step) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(`step${step}`).classList.add('active');
+  }
+
+  function selectKit(name, price, element) {
+    bookingData.selected_kit = name;
+    bookingData.price = price;
+    
+    document.querySelectorAll('.kit-option').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    
+    // Calculate 40% advance for Step 5
+    const advance = price * 0.40;
+    document.getElementById("advanceAmount").textContent = "₹" + advance.toLocaleString('en-IN');
+  }
+
+  async function sendOTP() {
+    const email = document.getElementById("userEmail").value;
+    const btn = document.getElementById("sendOtpBtn");
+    btn.textContent = "Sending...";
+    
+    try {
+      await fetch(`${API_BASE}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email })
+      });
+      document.getElementById("otpSection").style.display = "block";
+      btn.style.display = "none";
+    } catch (err) {
+      alert("Failed to send OTP.");
+      btn.textContent = "Send Secure Code";
+    }
+  }
+
+  async function verifyOTP() {
+    const payload = {
+      email: document.getElementById("userEmail").value,
+      name: document.getElementById("userName").value,
+      phone: document.getElementById("userPhone").value,
+      code: document.getElementById("otpCode").value
+    };
+    
+    try {
+      const res = await fetch(`${API_BASE}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        nextStep(5);
+      } else {
+        alert("Invalid OTP");
+      }
+    } catch (err) {
+      alert("Verification failed.");
+    }
+  }
+
+  async function initiatePayment() {
+    const btn = document.getElementById("payBtn");
+    btn.textContent = "Loading Secure Gateway...";
+    
+    try {
+      // 1. Create order on backend
+      const orderRes = await fetch(`${API_BASE}/create-order`, { method: "POST" });
+      const orderData = await orderRes.json();
+      
+      // 2. Open Razorpay Checkout
+      const options = {
+        key: "rzp_live_TNnnwKFqWsfL7e", // Add your Test Key ID here
+        amount: orderData.amount,
+        currency: "INR",
+        name: "GRIDLESS Solar",
+        description: "Site Inspection Fee",
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          btn.textContent = "Uploading Photos & Finalizing...";
+          
+          // 3. Prepare final form data
+          const formData = new FormData();
+          formData.append("balcony_direction", bookingData.balcony_direction);
+          formData.append("balcony_length", bookingData.balcony_length);
+          formData.append("floor_number", bookingData.floor_number);
+          formData.append("has_plug", bookingData.has_plug);
+          formData.append("selected_kit", bookingData.selected_kit);
+          formData.append("full_address", document.getElementById("fullAddress").value);
+          formData.append("flat_number", document.getElementById("flatNumber").value);
+          
+          formData.append("railing_image", document.getElementById("railingPhoto").files[0]);
+          formData.append("view_image", document.getElementById("viewPhoto").files[0]);
+          
+          // Attach Razorpay details for backend verification
+          formData.append("razorpay_payment_id", response.razorpay_payment_id);
+          formData.append("razorpay_order_id", response.razorpay_order_id);
+          formData.append("razorpay_signature", response.razorpay_signature);
+          
+          // 4. Submit to backend
+          const bookRes = await fetch(`${API_BASE}/book`, {
+            method: "POST",
+            body: formData
+          });
+          
+          if (bookRes.ok) {
+            nextStep('Success');
+          } else {
+            alert("Payment recorded, but failed to upload photos. Please contact support.");
+          }
+        },
+        prefill: {
+          name: document.getElementById("userName").value,
+          email: document.getElementById("userEmail").value,
+          contact: document.getElementById("userPhone").value
+        },
+        theme: { color: "#1C2321" }
+      };
+      
+      const rzp = new Razorpay(options);
+      rzp.open();
+      
+    } catch (err) {
+      alert("Could not load payment gateway.");
+      btn.textContent = "Pay ₹50 via UPI/Card";
+    }
+  }
+</script>
+</body>
+</html>

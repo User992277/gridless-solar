@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Dashboard — GRIDLESS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --concrete:#E4E0D6; --ink:#1C2321; --dusk:#1B2A4A;
+    --brass:#B08D57; --paper:#F7F5EF; --line: rgba(28,35,33,0.14);
+    --ease: cubic-bezier(.16,.8,.24,1);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--concrete); color:var(--ink);
+    font-family:'Inter', sans-serif; line-height:1.55;
+  }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; letter-spacing:-0.02em; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  
+  nav { background:rgba(228,224,214,0.82); backdrop-filter:blur(14px); border-bottom:1px solid var(--line); position:fixed; top:0; width:100%; z-index:10; }
+  .nav-inner { max-width:1000px; margin:0 auto; padding:18px 32px; display:flex; justify-content:space-between; align-items:center; }
+  .logo { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.15rem; display:flex; align-items:center; gap:8px;}
+  .logo-mark{ width:22px; height:22px; position:relative; flex-shrink:0; }
+  .logo-mark span{ position:absolute; left:0; right:0; height:2px; background:var(--brass); }
+  .logo-mark span:nth-child(1){ top:2px; }
+  .logo-mark span:nth-child(2){ top:10px; }
+  .logo-mark span:nth-child(3){ top:18px; }
+  
+  .btn-ghost { border:1px solid var(--line); padding:8px 16px; border-radius:2px; font-weight:600; font-size:0.85rem; cursor:pointer; background:none; }
+  
+  .wrap { max-width: 1000px; margin: 120px auto 60px; padding: 0 32px; }
+  
+  .tracker-box { background: var(--dusk); color: var(--paper); padding: 40px; border-left: 4px solid var(--brass); margin-bottom: 24px; }
+  .status-tag { font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--brass); text-transform:uppercase; display:block; margin-bottom:12px; }
+  .tracker-box h2 { font-size: 2rem; margin-bottom: 16px; }
+  .tracker-box p { font-size: 1rem; opacity: 0.8; max-width: 600px; }
+  
+  .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .info-card { background: var(--paper); border: 1px solid var(--line); padding: 32px; }
+  .info-card h3 { margin-bottom: 20px; font-size: 1.3rem; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+  .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; }
+  .detail-row span:first-child { opacity: 0.7; font-weight: 500; }
+  .detail-row span:last-child { font-weight: 600; text-align: right; }
+  
+  .support-card { background: var(--paper); border: 1px solid var(--line); padding: 32px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .whatsapp-btn { background: #25D366; color: white; text-decoration: none; padding: 14px 24px; font-weight: 600; border-radius: 2px; margin-top: 16px; display: inline-block; width: 100%; transition: transform 0.2s; }
+  .whatsapp-btn:hover { transform: translateY(-2px); }
+  
+  @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } .wrap { padding: 0 20px; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <span class="logo-mark"><span></span><span></span><span></span></span> GRIDLESS
+    </div>
+    <button class="btn-ghost" onclick="logout()">Log Out</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="tracker-box">
+    <span class="status-tag">Current Status: <span id="dbStatus">Loading...</span></span>
+    <h2>Your Site Inspection is Confirmed.</h2>
+    <p>Our team has received your ₹50 booking fee and balcony photos. We will reach your location within the next 1–2 business days to finalize the structural feasibility.</p>
+  </div>
+  
+  <div class="grid-layout">
+    <div class="info-card">
+      <h3>Booking Details</h3>
+      <div class="detail-row"><span>Hardware Selected</span><span id="dbKit">...</span></div>
+      <div class="detail-row"><span>Date Booked</span><span id="dbDate">...</span></div>
+      <div class="detail-row"><span>Registered Email</span><span id="dbEmail">...</span></div>
+      <div class="detail-row"><span>Site Address</span><span id="dbAddress" style="max-width: 60%;">...</span></div>
+      <div class="detail-row" style="margin-top: 20px; border-top: 1px solid var(--line); padding-top: 12px; color: var(--brass);">
+        <span>Est. Hardware Advance (40%)</span><span id="dbAdvance">Calculated on-site</span>
+      </div>
+    </div>
+    
+    <div class="support-card">
+      <h3 style="border:none; margin-bottom:8px;">Need to reschedule?</h3>
+      <p style="font-size:0.9rem; opacity:0.8; margin-bottom:12px;">Bypass the email queue and chat directly with our lead engineer regarding your site visit.</p>
+      <!-- Add your business WhatsApp number below -->
+      <a href="https://wa.me/910000000000" class="whatsapp-btn" target="_blank">Chat with Mohit on WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://127.0.0.1:5000/api"; // Keep synced with Ngrok
+  
+  async function loadDashboard() {
+    try {
+      const res = await fetch(`${API_BASE}/me`, { credentials: 'include' });
+      
+      // If server returns 401 Unauthorized, boot them back to the login page
+      if (!res.ok) { window.location.href = "index.html"; return; }
+      
+      const data = await res.json();
+      
+      // If the user has an active booking
+      if (data.booking) {
+        document.getElementById("dbEmail").textContent = data.user.email;
+        document.getElementById("dbStatus").textContent = data.booking.status;
+        document.getElementById("dbKit").textContent = data.booking.selected_kit;
+        document.getElementById("dbDate").textContent = data.booking.created_at;
+        document.getElementById("dbAddress").textContent = data.booking.address;
+        
+        if (data.booking.selected_kit.includes("Hybrid")) {
+            document.getElementById("dbAdvance").textContent = "₹20,800";
+        } else {
+            document.getElementById("dbAdvance").textContent = "₹16,800";
+        }
+      } 
+      // If the user has NO active bookings (Empty State)
+      else {
+        document.getElementById("dbStatus").textContent = "NO ACTIVE BOOKINGS";
+        document.querySelector(".tracker-box h2").textContent = `Welcome, ${data.user.name || 'User'}!`;
+        document.querySelector(".tracker-box p").textContent = "You haven't booked a site inspection yet. Your registered email is " + data.user.email;
+        
+        // Replace the lower grid with a "Start Booking" CTA
+        document.querySelector(".grid-layout").innerHTML = `
+            <div class="info-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+                <h3 style="border: none; margin-bottom: 12px; padding-bottom:0;">Ready to put your balcony to work?</h3>
+                <p style="opacity: 0.8; margin-bottom: 24px;">Run a quick feasibility check to see which solar kit fits your space.</p>
+                <a href="index.html#book" style="background: var(--brass); color: var(--paper); padding: 14px 24px; text-decoration: none; font-weight: 600; border-radius: 2px; display: inline-block;">Start Feasibility Check</a>
+            </div>
+        `;
+      }
+    } catch (e) {
+      alert("Lost connection to server.");
+    }
+  }
+
+  async function logout() {
+    await fetch(`${API_BASE}/logout`, { method: "POST", credentials: "include" });
+    window.location.href = "index.html";
+  }
+
+  // Load data immediately when page opens
+  loadDashboard();
+</script>
+</body>
+</html>

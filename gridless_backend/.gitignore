@@ -1,0 +1,10 @@
+# Ignore Environment Variables (Secrets)
+.env
+
+# Ignore Python Cache
+__pycache__/
+*.pyc
+
+# Ignore Mac/Windows System files
+.DS_Store
+Thumbs.db
