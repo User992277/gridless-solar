@@ -40,9 +40,10 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 }
 
 # Security & Session Settings
+# Security & Session Settings
 app.config["SESSION_COOKIE_HTTPONLY"] = True
-app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
+app.config["SESSION_COOKIE_SAMESITE"] = "None" # Allows cross-domain cookies
+app.config["SESSION_COOKIE_SECURE"] = True     # Required when SameSite is None
 
 # Initialize Extensions
 db.init_app(app)
