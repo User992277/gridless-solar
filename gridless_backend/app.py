@@ -44,7 +44,7 @@ app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
 
 # Initialize Extensions
 db.init_app(app)
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, origins=["https://gridless-solar.vercel.app", "http://localhost:8000", "http://127.0.0.1:8000"])
 
 limiter = Limiter(
     get_remote_address,
