@@ -889,31 +889,42 @@
   function openLoginModal(e) { e.preventDefault(); loginModal.classList.add('active'); }
   function closeLoginModal() { loginModal.classList.remove('active'); }
 
-  async function sendLoginOTP() {
-    const email = document.getElementById("loginEmail").value;
-    const btn = document.getElementById("loginSendBtn");
-    btn.textContent = "Sending...";
+ async function sendLoginOTP() {
+  const emailInput = document.getElementById("loginEmail").value.trim();
+  const msgContainer = document.getElementById("loginMessageContainer"); // Add an empty <div id="loginMessageContainer"></div> under your email input in HTML
+  
+  if (!emailInput) return alert("Please enter an email");
+
+  msgContainer.innerHTML = "Searching records...";
+
+  try {
+    const response = await fetch(`${API_BASE}/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email: emailInput, intent: 'login' }) // Specify login intent
+    });
     
-    try {
-      const res = await fetch(`${API_BASE}/send-otp`, {
-        method: "POST",
-        headers: JSON_HEADERS,
-        body: JSON.stringify({ email: email })
-      });
-      
-      if (!res.ok) {
-        if (res.status === 429) alert("Security: Too many OTP requests. Please wait 60 seconds.");
-        else alert(`Server Error: ${res.status}`);
-        btn.textContent = "Send Secure Code";
-        return;
-      }
-      document.getElementById("loginStep1").style.display = "none";
-      document.getElementById("loginStep2").style.display = "block";
-    } catch (err) { 
-      alert("Network Error: Could not reach the server."); 
-      btn.textContent = "Send Secure Code"; 
+    const data = await response.json();
+    
+    if (response.ok) {
+      msgContainer.innerHTML = "<span style='color:green;'>OTP sent to your inbox!</span>";
+      // Code to reveal your OTP input box goes here
+    } else if (data.error === "NO_BOOKING") {
+      // The backend stopped the email and told us no booking exists
+      msgContainer.innerHTML = `
+        <div style="background: rgba(176,141,87,0.1); border: 1px solid #B08D57; padding: 16px; margin-top: 12px; border-radius: 4px;">
+            <p style="font-size: 0.9rem; margin-bottom: 12px;">We couldn't find an active site inspection for this email.</p>
+            <a href="booking.html" class="btn btn-brass" style="width: 100%; text-decoration: none; text-align: center;">Book Site Inspection</a>
+        </div>
+      `;
+    } else {
+      msgContainer.innerHTML = `<span style="color:red;">Error: ${data.error}</span>`;
     }
+  } catch (err) {
+    msgContainer.innerHTML = `<span style="color:red;">Server connection failed.</span>`;
   }
+}
 
   async function verifyLoginOTP() {
     const payload = { email: document.getElementById("loginEmail").value, code: document.getElementById("loginOtpCode").value, name: "", phone: "" };

@@ -120,13 +120,26 @@ def qualify_balcony():
 def send_otp():
     data = request.json or {}
     email = data.get("email", "").strip().lower()
+    intent = data.get("intent", "login") # Defaults to 'login' for safety
     
     if not email:
         return jsonify({"error": "Email is required"}), 400
         
+    # --- SMART ROUTING: Protect the Brevo API Limits ---
+    if intent == "login":
+        # 1. Check if user exists at all
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "NO_BOOKING", "message": "No account found."}), 404
+            
+        # 2. Check if user actually has a recorded booking
+        booking = Booking.query.filter_by(user_id=user.id).first()
+        if not booking:
+            return jsonify({"error": "NO_BOOKING", "message": "No active booking found."}), 404
+
+    # --- Proceed to Generate & Send OTP ---
     otp_code = str(random.randint(100000, 999999))
     
-    # 1. Save or update OTP in Neon DB
     otp_entry = OTP.query.filter_by(email=email).first()
     if not otp_entry:
         otp_entry = OTP(email=email, code=otp_code, expires_at=OTP.generate_expiration())
@@ -137,9 +150,8 @@ def send_otp():
         
     db.session.commit()
     
-    # 2. Send email via Brevo REST API
     brevo_api_key = os.environ.get('BREVO_API_KEY')
-    sender_email = os.environ.get('SENDER_EMAIL', 'jeskojets.system@gmail.com') # Set in Render ENV
+    sender_email = os.environ.get('SENDER_EMAIL')
     
     if brevo_api_key:
         url = "https://api.brevo.com/v3/smtp/email"
@@ -155,7 +167,7 @@ def send_otp():
             "htmlContent": f"""
             <div style="font-family: sans-serif; padding: 20px; color: #1C2321;">
                 <h2>Verify Your Email</h2>
-                <p>Your GRIDLESS site inspection verification code is:</p>
+                <p>Your GRIDLESS verification code is:</p>
                 <h1 style="color: #B08D57; letter-spacing: 4px;">{otp_code}</h1>
                 <p>This code is valid for 10 minutes.</p>
             </div>
@@ -167,9 +179,7 @@ def send_otp():
         except Exception as e:
             print(f"[Brevo Error] Could not send email: {e}")
             
-    print(f"[DEV CONSOLE] OTP for {email}: {otp_code}")
     return jsonify({"message": "OTP sent successfully to email"}), 200
-
 
 @app.route("/api/verify-otp", methods=["POST"])
 def verify_otp():
@@ -342,9 +352,13 @@ def create_order():
         order = razorpay_client.order.create({
             "amount": 5000,
             "currency": "INR",
-            "payment_capture": "1"
+            "payment_capture": 1
         })
-        return jsonify({"order_id": order["id"], "amount": 5000}), 200
+        return jsonify({
+            "order_id": order["id"], 
+            "amount": 5000,
+            "key_id": os.environ.get("RAZORPAY_KEY_ID")  # Dynamically return key
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

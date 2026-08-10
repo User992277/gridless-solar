@@ -233,7 +233,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // Preserves session cookie
-        body: JSON.stringify({ email: userEmail })
+        body: JSON.stringify({ email: userEmail, intent: 'booking' })
       });
       
       const data = await response.json();
@@ -306,8 +306,9 @@
       
       const orderData = await orderRes.json();
       
+      // 2. Open Razorpay Checkout
       const options = {
-        key: "rzp_live_TNnnwKFqWsfL7e",
+        key: orderData.key_id, // Dynamically received from backend
         amount: orderData.amount,
         currency: "INR",
         name: "GRIDLESS Solar",
