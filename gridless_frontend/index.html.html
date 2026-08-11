@@ -307,7 +307,7 @@
     
     <!-- New Desktop Buttons -->
     <div class="nav-actions">
-      <a href="#" id="navAuthBtn" class="btn" style="opacity:0.8;" onclick="openLoginModal(event)">Login</a>
+      <a href="#" id="navAuthBtn" class="btn" style="opacity:0.8; display:none;" onclick="openLoginModal(event)">Login</a>
       <a href="#book" class="btn btn-brass">Check Balcony</a>
     </div>
     
@@ -320,7 +320,7 @@
     <a href="#calculator">Savings</a>
     <a href="#process">How It Works</a>
     <a href="#areas">Coverage</a>
-    <a href="#" id="mobileAuthBtn" class="btn" style="justify-content:center; margin-top:14px; opacity:0.8;" onclick="openLoginModal(event)">Login</a>
+    <a href="#" id="mobileAuthBtn" class="btn" style="justify-content:center; margin-top:14px; opacity:0.8; display:none;" onclick="openLoginModal(event)">Login</a>
     <a href="#book" class="btn btn-brass" style="justify-content:center; margin-top:8px;">Check My Balcony</a>
   </div>
 </nav>
@@ -867,23 +867,39 @@
     }
   });
 
-  // --- 2. Check Active Session ---
+ // --- 2. Gate Login button behind a completed, PAID booking ---
   async function checkActiveSession() {
+    const deskBtn = document.getElementById('navAuthBtn');
+    const mobBtn = document.getElementById('mobileAuthBtn');
+    const hasBookedLocally = localStorage.getItem('gridless_booked') === 'true';
+
     try {
       const res = await fetch(`${API_BASE}/me`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        if (data.authenticated) {
-          const deskBtn = document.getElementById('navAuthBtn');
-          const mobBtn = document.getElementById('mobileAuthBtn');
+        // IMPORTANT: a session alone isn't enough — OTP is verified in Step 4,
+        // before payment. Only unlock this once data.booking actually exists.
+        if (data.authenticated && data.booking) {
+          localStorage.setItem('gridless_booked', 'true');
+          deskBtn.style.display = 'inline-flex';
+          mobBtn.style.display = 'inline-flex';
           deskBtn.textContent = 'My Dashboard'; deskBtn.href = 'dashboard.html'; deskBtn.onclick = null;
           mobBtn.textContent = 'My Dashboard'; mobBtn.href = 'dashboard.html'; mobBtn.onclick = null;
+          return;
         }
       }
     } catch (e) { console.log("No active session."); }
+
+    // No qualifying session (e.g. cookie expired) — fall back to the local
+    // flag set right after a successful payment, so returning customers can
+    // still find Login. Brand-new visitors have neither, so it stays hidden.
+    if (hasBookedLocally) {
+      deskBtn.style.display = 'inline-flex';
+      mobBtn.style.display = 'inline-flex';
+      // Login onclick handlers are already wired in the HTML markup above.
+    }
   }
   checkActiveSession();
-
   // --- 3. Login Modal Logic ---
   const loginModal = document.getElementById('loginModal');
   function openLoginModal(e) { e.preventDefault(); loginModal.classList.add('active'); }

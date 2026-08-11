@@ -340,7 +340,10 @@
           });
           
           if (bookRes.ok) {
-            nextStep('Success');
+            // Mark this browser as having a paid booking so the Login
+            // button unlocks on the landing page, then go straight to dashboard.
+            localStorage.setItem('gridless_booked', 'true');
+            window.location.href = 'dashboard.html';
           } else {
             alert("Payment recorded, but failed to upload booking details. Please contact support.");
           }

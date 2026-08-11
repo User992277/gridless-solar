@@ -103,7 +103,9 @@
       const data = await res.json();
       
       // If the user has an active booking
+      // If the user has an active booking
       if (data.booking) {
+        localStorage.setItem('gridless_booked', 'true');
         document.getElementById("dbEmail").textContent = data.user.email;
         document.getElementById("dbStatus").textContent = data.booking.status;
         document.getElementById("dbKit").textContent = data.booking.selected_kit;
