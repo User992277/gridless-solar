@@ -351,13 +351,13 @@ def create_order():
     try:
         # Amount is in paise (5000 paise = ₹50)
         order = razorpay_client.order.create({
-            "amount": 5000,
+            "amount": 100,
             "currency": "INR",
             "payment_capture": 1
         })
         return jsonify({
             "order_id": order["id"], 
-            "amount": 5000,
+            "amount": 100,
             "key_id": os.environ.get("RAZORPAY_KEY_ID")  # Dynamically return key
         }), 200
     except Exception as e:
