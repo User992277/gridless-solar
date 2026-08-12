@@ -955,9 +955,16 @@
         credentials: "include",
         body: JSON.stringify(payload)
       });
-      if (res.ok) window.location.href = "dashboard.html";
-      else alert("Invalid OTP");
-    } catch (err) { alert("Verification failed."); }
+      if (res.ok) {
+  const data = await res.json();
+  if (data.token) localStorage.setItem('gridless_token', data.token);
+  window.location.href = "dashboard.html";
+} else {
+  alert("Invalid OTP");
+}
+    } catch (err) {
+      alert("Verification failed.");
+    }
   }
 </script>
 </body>
