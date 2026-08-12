@@ -15,6 +15,7 @@ import cloudinary
 import cloudinary.uploader
 
 from functools import wraps
+from config import Config
 
 # Import shared db instance and database models
 from database import db
@@ -33,20 +34,11 @@ razorpay_client = razorpay.Client(
     auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
 )
 # --- Configuration ---
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
+app.config.from_object(Config)
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
 }
-
-# Security & Session Settings
-# Security & Session Settings
-app.config["SESSION_COOKIE_HTTPONLY"] = True
-app.config["SESSION_COOKIE_SAMESITE"] = "None" # Allows cross-domain cookies
-app.config["SESSION_COOKIE_SECURE"] = True     # Required when SameSite is None
 
 serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
@@ -452,4 +444,4 @@ with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=os.getenv("FLASK_ENV") != "production")
