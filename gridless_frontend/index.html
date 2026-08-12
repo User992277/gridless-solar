@@ -929,7 +929,7 @@
     
     if (response.ok) {
       msgContainer.innerHTML = "<span style='color:green;'>OTP sent to your inbox!</span>";
-      // Code to reveal your OTP input box goes here
+      document.getElementById("loginStep2").style.display = "block";
     } else if (data.error === "NO_BOOKING") {
       // The backend stopped the email and told us no booking exists
       msgContainer.innerHTML = `
