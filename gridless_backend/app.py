@@ -58,6 +58,18 @@ def get_authenticated_user_id():
             return None
     return session.get("user_id")
 
+def get_authenticated_user_id_strict():
+    """Bearer token only (no cookie fallback). Protects state-changing routes against CSRF."""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+        try:
+            data = serializer.loads(token, max_age=60 * 60 * 24 * 30)
+            return data.get("user_id")
+        except (BadSignature, SignatureExpired):
+            return None
+    return None
+
 def admin_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -72,6 +84,13 @@ def admin_required(f):
 db.init_app(app)
 CORS(app, supports_credentials=True, origins=["https://gridless-solar.vercel.app", "http://localhost:8000", "http://127.0.0.1:8000"])
 
+@app.after_request
+def set_security_headers(resp):
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return resp
+
 limiter = Limiter(
     get_remote_address,
     app=app,
@@ -79,7 +98,16 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
+ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
+MAX_BYTES = 5 * 1024 * 1024  # 5MB
 
+def validate_image(file_storage):
+    if not file_storage or file_storage.mimetype not in ALLOWED_MIME:
+        return False
+    file_storage.stream.seek(0, os.SEEK_END)
+    size = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+    return size <= MAX_BYTES
 # --- Helper Functions ---
 def upload_balcony_image(file_storage, user_id, image_type):
     """
@@ -206,6 +234,7 @@ def send_otp():
     return jsonify({"message": "OTP sent successfully to email"}), 200
 
 @app.route("/api/verify-otp", methods=["POST"])
+@limiter.limit("5 per minute")
 def verify_otp():
     data = request.json or {}
     email = data.get("email", "").strip().lower()
@@ -249,7 +278,7 @@ def verify_otp():
 # ==========================================
 @app.route("/api/book", methods=["POST"])
 def create_booking():
-    user_id = get_authenticated_user_id()
+    user_id = get_authenticated_user_id_strict()
     if not user_id:
         return jsonify({"error": "Authentication required before booking"}), 401
         
@@ -286,6 +315,9 @@ def create_booking():
     
     if not railing_file or not view_file:
         return jsonify({"error": "Both railing and view photos are required"}), 400
+        
+    if not validate_image(railing_file) or not validate_image(view_file):
+        return jsonify({"error": "Images must be JPEG, PNG, or WEBP under 5MB"}), 400
         
     railing_url = upload_balcony_image(railing_file, user_id, "railing")
     view_url = upload_balcony_image(view_file, user_id, "view")
@@ -372,7 +404,7 @@ def update_status(booking_id):
 # ==========================================
 @app.route("/api/create-order", methods=["POST"])
 def create_order():
-    user_id = get_authenticated_user_id()
+    user_id = get_authenticated_user_id_strict()
     if not user_id:
         return jsonify({"error": "Authentication required"}), 401
         
