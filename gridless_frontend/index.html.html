@@ -874,7 +874,10 @@
     const hasBookedLocally = localStorage.getItem('gridless_booked') === 'true';
 
     try {
-      const res = await fetch(`${API_BASE}/me`, { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/me`, {
+        credentials: 'include',
+        headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('gridless_token') || '') }
+      });
       if (res.ok) {
         const data = await res.json();
         // IMPORTANT: a session alone isn't enough — OTP is verified in Step 4,

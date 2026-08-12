@@ -4,6 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 import requests
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
@@ -44,6 +45,24 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "None" # Allows cross-domain cookies
 app.config["SESSION_COOKIE_SECURE"] = True     # Required when SameSite is None
+
+serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+
+def issue_token(user_id):
+    return serializer.dumps({"user_id": user_id})
+
+def get_authenticated_user_id():
+    """Checks Authorization: Bearer <token> first (works cross-site),
+    falls back to the session cookie (works same-site / local dev)."""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+        try:
+            data = serializer.loads(token, max_age=60 * 60 * 24 * 30)  # 30 days
+            return data.get("user_id")
+        except (BadSignature, SignatureExpired):
+            return None
+    return session.get("user_id")
 
 # Initialize Extensions
 db.init_app(app)
@@ -210,11 +229,14 @@ def verify_otp():
     db.session.delete(record) # Delete OTP so it cannot be reused
     db.session.commit()
     
-    # 3. Log user into Flask Session (CRITICAL for Razorpay & Booking!)
+    
+   # 3. Session cookie (works when not blocked) + portable token (always works)
     session["user_id"] = user.id
+    token = issue_token(user.id)
     
     return jsonify({
         "message": "Authenticated successfully",
+        "token": token,
         "user": {"id": user.id, "email": user.email, "name": user.name}
     }), 200
 
@@ -223,7 +245,7 @@ def verify_otp():
 # ==========================================
 @app.route("/api/book", methods=["POST"])
 def create_booking():
-    user_id = session.get("user_id")
+    user_id = get_authenticated_user_id()
     if not user_id:
         return jsonify({"error": "Authentication required before booking"}), 401
         
@@ -344,7 +366,7 @@ def update_status(booking_id):
 # ==========================================
 @app.route("/api/create-order", methods=["POST"])
 def create_order():
-    user_id = session.get("user_id")
+    user_id = get_authenticated_user_id()
     if not user_id:
         return jsonify({"error": "Authentication required"}), 401
         
@@ -371,7 +393,7 @@ def create_order():
 # ==========================================
 @app.route("/api/me", methods=["GET"])
 def get_current_user():
-    user_id = session.get("user_id")
+    user_id = get_authenticated_user_id()
     if not user_id:
         return jsonify({"authenticated": False}), 401
         

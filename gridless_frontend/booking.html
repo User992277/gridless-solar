@@ -278,6 +278,7 @@
       
       const data = await response.json();
       if (response.ok) {
+        if (data.token) localStorage.setItem('gridless_token', data.token);
         alert("Identity verified successfully!");
         nextStep(5); // Automatically move to Step 5 (Payment)
       } else {
@@ -297,7 +298,8 @@
       // Create order on backend (session cookie is sent automatically)
       const orderRes = await fetch(`${API_BASE}/create-order`, { 
         method: "POST",
-        credentials: 'include' 
+        credentials: 'include',
+        headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('gridless_token') || '') }
       });
       
       if (!orderRes.ok) {
@@ -336,6 +338,7 @@
           const bookRes = await fetch(`${API_BASE}/book`, {
             method: "POST",
             credentials: 'include',
+            headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('gridless_token') || '') },
             body: formData
           });
           
