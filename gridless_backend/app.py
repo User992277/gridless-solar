@@ -14,6 +14,8 @@ from flask_limiter.util import get_remote_address
 import cloudinary
 import cloudinary.uploader
 
+from functools import wraps
+
 # Import shared db instance and database models
 from database import db
 from models import User, OTP, Booking
@@ -63,6 +65,16 @@ def get_authenticated_user_id():
         except (BadSignature, SignatureExpired):
             return None
     return session.get("user_id")
+
+def admin_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        user_id = get_authenticated_user_id()
+        user = User.query.get(user_id) if user_id else None
+        if not user or not user.is_admin:
+            return jsonify({"error": "Admin access required"}), 403
+        return f(*args, **kwargs)
+    return wrapper
 
 # Initialize Extensions
 db.init_app(app)
@@ -320,6 +332,7 @@ VALID_STATUSES = [
 ]
 
 @app.route("/api/admin/bookings", methods=["GET"])
+@admin_required
 def get_all_bookings():
     bookings = Booking.query.order_by(Booking.created_at.desc()).all()
     
@@ -345,6 +358,7 @@ def get_all_bookings():
 
 
 @app.route("/api/admin/booking/<int:booking_id>/status", methods=["PATCH"])
+@admin_required
 def update_status(booking_id):
     data = request.json or {}
     new_status = data.get("status")
