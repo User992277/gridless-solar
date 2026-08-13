@@ -82,7 +82,13 @@ def admin_required(f):
 
 # Initialize Extensions
 db.init_app(app)
-CORS(app, supports_credentials=True, origins=["https://gridless-solar.vercel.app", "http://localhost:8000", "http://127.0.0.1:8000"])
+CORS(app, supports_credentials=True, origins=[
+    "https://gridless-solar.shop",
+    "https://www.gridless-solar.shop",
+    "https://gridless-solar.vercel.app", 
+    "http://localhost:8000",
+    "http://127.0.0.1:8000"
+])
 
 @app.after_request
 def set_security_headers(resp):
