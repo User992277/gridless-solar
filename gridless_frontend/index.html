@@ -166,6 +166,15 @@
   .on-dusk .sector-tag{ opacity:0.5; }
   .on-dusk .sector-head p{ opacity:0.7; }
 
+  /* ---------- Sector images ---------- */
+  .sector-visual{ position:relative; aspect-ratio:1/1; overflow:hidden; border:1px solid var(--line); background:var(--paper); }
+  .sector-visual img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .sector-visual .cap{ position:absolute; left:0; right:0; bottom:0; padding:10px 14px; font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.03em; color:var(--paper); background:linear-gradient(to top, rgba(28,35,33,0.78), transparent); }
+  .on-dusk .sector-visual{ border-color:var(--line-dusk); }
+  .head-media{ display:grid; grid-template-columns:1.25fr 1fr; gap:48px; align-items:end; margin-bottom:56px; }
+  .head-media .sector-head{ margin-bottom:0; max-width:none; }
+  @media (max-width:860px){ .head-media{ grid-template-columns:1fr; } .head-media .sector-visual{ order:-1; } }
+
   /* ---------- Problem grid ---------- */
   .problem-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
   .problem-card{ background:var(--concrete); padding:36px 30px; }
@@ -174,15 +183,15 @@
   .problem-card p{ font-size:0.92rem; opacity:0.7; }
   @media (max-width:860px){ .problem-grid{ grid-template-columns:1fr; } }
 
-  /* ---------- Fix / bracket diagram ---------- */
+  /* ---------- Fix ---------- */
   .fix-layout{ display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
   .fix-list{ list-style:none; margin-top:28px; display:flex; flex-direction:column; gap:20px; }
   .fix-list li{ display:flex; gap:16px; align-items:flex-start; }
   .fix-list .mark{ font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--brass); border:1px solid var(--brass); border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
   .fix-list b{ display:block; font-size:0.98rem; }
   .fix-list span.desc{ font-size:0.88rem; opacity:0.68; }
-  .bracket-diagram{ position:relative; aspect-ratio:1/1; background:var(--paper); border:1px solid var(--line); overflow:hidden; }
-  @media (max-width:860px){ .fix-layout{ grid-template-columns:1fr; gap:40px; } }
+  @media (max-width:860px){ .fix-layout{ grid-template-columns:1fr; gap:40px; } .fix-layout .sector-visual{ order:-1; } }
+
 
   /* ---------- Calculator ---------- */
   .calc-box{
@@ -349,10 +358,16 @@
 <!-- SECTOR 01 — PROBLEM -->
 <section id="problem">
   <div class="wrap">
-    <div class="sector-head reveal">
-      <span class="sector-tag">Sector 01 — The Problem</span>
-      <h2>Owning the flat doesn't mean owning your power bill.</h2>
-      <p>High-rise living in the Tricity comes with a specific kind of powerlessness: the roof belongs to the RWA, the wiring belongs to the builder's plan, and every summer the grid buckles right when your AC needs it most.</p>
+    <div class="head-media reveal">
+      <div class="sector-head">
+        <span class="sector-tag">Sector 01 — The Problem</span>
+        <h2>Owning the flat doesn't mean owning your power bill.</h2>
+        <p>High-rise living in the Tricity comes with a specific kind of powerlessness: the roof belongs to the RWA, the wiring belongs to the builder's plan, and every summer the grid buckles right when your AC needs it most.</p>
+      </div>
+      <div class="sector-visual">
+        <img src="images/solar1.jpeg" alt="High-rise apartment balconies in the Tricity" loading="lazy">
+        <span class="cap">FIG. 01 — HIGH-RISE BALCONIES, TRICITY</span>
+      </div>
     </div>
     <div class="problem-grid reveal">
       <div class="problem-card">
@@ -390,31 +405,9 @@
           <li><span class="mark">04</span><div><b>Outside the approval loop</b><span class="desc">Designed to fall outside standard DISCOM net-metering and RWA drilling requirements.</span></div></li>
         </ul>
       </div>
-      <div class="bracket-diagram reveal" aria-hidden="true">
-        <svg viewBox="0 0 400 400" width="100%" height="100%">
-          <rect width="400" height="400" fill="#F7F5EF"/>
-          <g stroke="#1C2321" stroke-width="1.4" opacity="0.85" fill="none">
-            <line x1="40" y1="330" x2="360" y2="330"/>
-            <line x1="40" y1="330" x2="40" y2="90"/>
-            <line x1="40" y1="120" x2="70" y2="120"/>
-            <line x1="40" y1="170" x2="70" y2="170"/>
-            <line x1="40" y1="220" x2="70" y2="220"/>
-            <line x1="40" y1="270" x2="70" y2="270"/>
-          </g>
-          <g id="panel" transform="translate(90,150) rotate(-18)">
-            <rect x="0" y="0" width="220" height="130" fill="none" stroke="#B08D57" stroke-width="2"/>
-            <line x1="0" y1="26" x2="220" y2="26" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="0" y1="52" x2="220" y2="52" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="0" y1="78" x2="220" y2="78" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="0" y1="104" x2="220" y2="104" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="55" y1="0" x2="55" y2="130" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="110" y1="0" x2="110" y2="130" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="165" y1="0" x2="165" y2="130" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-          </g>
-          <circle cx="70" cy="220" r="4" fill="#4C7A6B"/>
-          <line x1="70" y1="220" x2="90" y2="210" stroke="#4C7A6B" stroke-width="1.6" stroke-dasharray="3 3"/>
-          <text x="255" y="360" font-family="JetBrains Mono, monospace" font-size="11" fill="#1C2321" opacity="0.55">FIG. 02 — RAIL-CLAMP MOUNT, 18&#176; TILT</text>
-        </svg>
+      <div class="sector-visual reveal">
+        <img src="images/solar2.jpg" alt="Rail-clamp solar panel mount on a balcony railing" loading="lazy">
+        <span class="cap">FIG. 02 — RAIL-CLAMP MOUNT, INSTALLED</span>
       </div>
     </div>
   </div>
@@ -517,10 +510,16 @@
 <!-- SECTOR 05 — PROCESS (dusk) -->
 <section id="process" class="on-dusk">
   <div class="wrap">
-    <div class="sector-head reveal">
-      <span class="sector-tag">Sector 05 — The Process</span>
-      <h2>Four steps. Nothing signed until it's confirmed on-site.</h2>
-      <p>You never pay to find out if your balcony qualifies — you only pay once someone has stood on it.</p>
+    <div class="head-media reveal">
+      <div class="sector-head">
+        <span class="sector-tag">Sector 05 — The Process</span>
+        <h2>Four steps. Nothing signed until it's confirmed on-site.</h2>
+        <p>You never pay to find out if your balcony qualifies — you only pay once someone has stood on it.</p>
+      </div>
+      <div class="sector-visual">
+        <img src="images/solar3.jpg" alt="Technician installing a balcony solar panel bracket" loading="lazy">
+        <span class="cap">FIG. 03 — SITE INSTALL, IN PROGRESS</span>
+      </div>
     </div>
     <div class="process-row reveal">
       <div class="process-card">
@@ -555,6 +554,10 @@
   <div class="wrap">
     <div class="assure-grid">
       <div class="reveal">
+        <div class="sector-visual" style="aspect-ratio:16/9; margin-bottom:28px;">
+          <img src="images/solar4.jpg" alt="Close-up of load-tested bracket and safety tether hardware" loading="lazy">
+          <span class="cap">FIG. 04 — TESTED BRACKET & TETHER HARDWARE</span>
+        </div>
         <span class="sector-tag">Sector 06 — Before You Commit</span>
         <h2 style="font-size:clamp(1.9rem,3.4vw,2.7rem); font-weight:600; margin-bottom:28px;">Nothing about this should feel risky.</h2>
         <ul class="assure-list">
