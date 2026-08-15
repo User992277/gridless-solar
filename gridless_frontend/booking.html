@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Secure Booking — GRIDLESS</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<!-- Razorpay Checkout SDK -->
+<!-- Razorpay SDK -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <style>
   :root{
     --concrete:#E4E0D6; --ink:#1C2321; --dusk:#1B2A4A;
-    --brass:#B08D57; --brass-light:#C9A876; --paper:#F7F5EF; --line: rgba(28,35,33,0.14);
+    --brass:#B08D57; --paper:#F7F5EF; --line: rgba(28,35,33,0.14);
     --ease: cubic-bezier(.16,.8,.24,1);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -51,7 +51,7 @@
   .form-group input:focus { border-color: var(--brass); }
   
   .file-upload {
-    border: 1px dashed var(--line); padding: 20px; text-align: center;
+    border: 1px dashed var(--line); padding: 30px; text-align: center;
     background: var(--concrete); cursor: pointer; margin-bottom:16px;
   }
   
@@ -63,7 +63,6 @@
   }
   .btn-brass { background:var(--brass); color:var(--paper); }
   .btn-brass:hover { background:var(--ink); transform:translateY(-2px); }
-  .btn-brass:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   
   .info-box {
     background: var(--dusk); color: var(--paper); padding: 20px;
@@ -78,9 +77,9 @@
   <div class="step active" id="step1">
     <span class="header-tag">Step 1 of 5</span>
     <h2>Select Your System</h2>
-    <p style="font-size:0.9rem; margin-bottom:20px; opacity:0.8;">Based on your <span id="displayTier" class="mono" style="color:var(--brass);">Standard</span> balcony, choose your setup:</p>
+    <p style="font-size:0.9rem; margin-bottom:20px; opacity:0.8;">Based on your <span id="displayTier" class="mono" style="color:var(--brass);"></span> balcony, choose your setup:</p>
     
-    <div class="kit-option selected" onclick="selectKit('Grid-Tied (Bill Reducer)', 42000, this)">
+    <div class="kit-option" onclick="selectKit('Grid-Tied (Bill Reducer)', 42000, this)">
       <h3 style="font-size:1.2rem;">The Bill Reducer (Grid-Tied)</h3>
       <p style="font-size:0.85rem; opacity:0.7; margin-top:4px;">Lowers daily electricity bills. No battery.</p>
       <div class="mono" style="font-weight:600; font-size:1.1rem; margin-top:10px;">₹42,000</div>
@@ -103,13 +102,13 @@
     
     <div class="form-group">
       <label>1. Balcony Railing (Close-up)</label>
-      <input type="file" id="railingPhoto" accept="image/*" class="file-upload" required>
+      <input type="file" id="railingPhoto" accept="image/*" capture="environment" class="file-upload" required>
     </div>
     <div class="form-group">
       <label>2. Outward View (Looking outside)</label>
-      <input type="file" id="viewPhoto" accept="image/*" class="file-upload" required>
+      <input type="file" id="viewPhoto" accept="image/*" capture="environment" class="file-upload" required>
     </div>
-    <button class="btn btn-brass" onclick="validateStep2()">Continue to Location</button>
+    <button class="btn btn-brass" onclick="nextStep(3)">Continue to Location</button>
   </div>
 
   <!-- STEP 3: Location -->
@@ -125,7 +124,7 @@
       <label>Full Society Address</label>
       <input type="text" id="fullAddress" placeholder="e.g. Maya Garden, Zirakpur" required>
     </div>
-    <button class="btn btn-brass" onclick="validateStep3()">Continue to Details</button>
+    <button class="btn btn-brass" onclick="nextStep(4)">Continue to Details</button>
   </div>
 
   <!-- STEP 4: Auth / OTP -->
@@ -151,9 +150,9 @@
     <div id="otpSection" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--line);">
       <div class="form-group">
         <label>Enter 6-Digit OTP</label>
-        <input type="text" id="otpCode" placeholder="000000" maxlength="6">
+        <input type="text" id="otpCode" placeholder="000000">
       </div>
-      <button class="btn btn-brass" id="verifyOtpBtn" onclick="verifyOTP()">Verify &amp; Proceed to Payment</button>
+      <button class="btn btn-brass" onclick="verifyOTP()">Verify & Proceed to Payment</button>
     </div>
   </div>
 
@@ -164,27 +163,39 @@
     
     <div class="info-box">
       <strong>Transparency Note:</strong><br>
-      Upon successful site inspection and final agreement, a 40% hardware advance will be collected offline before installation. Based on your selection, this advance will be approximately <span id="advanceAmount" class="mono" style="font-weight:600; color:var(--brass-light);">₹16,800</span>.
+      Upon successful site inspection and final agreement, a 40% hardware advance will be collected offline before installation. Based on your selection, this advance will be approximately <span id="advanceAmount" class="mono" style="font-weight:600; color:var(--brass-light);"></span>.
     </div>
     
     <p style="font-size:0.9rem; margin-bottom:24px; opacity:0.8;">A fully refundable booking fee of <strong>₹1</strong> is required to lock in your site inspection.</p>
     
     <button class="btn btn-brass" id="payBtn" onclick="initiatePayment()">Pay ₹1 via UPI/Card</button>
   </div>
+  
+  <!-- Success Step -->
+  <div class="step" id="stepSuccess">
+    <span class="header-tag">Confirmed</span>
+    <h2>Booking Successful</h2>
+    <p style="font-size:0.9rem; margin-bottom:24px; opacity:0.8;">Your site inspection is confirmed! Our team will reach your location within the next 1 to 2 days.</p>
+    
+    <a href="#" class="btn btn-brass" style="background:#25D366; color:white;">Chat with Mohit on WhatsApp</a>
+  </div>
 </div>
 
 <script>
+  // API URL - Replace with your actual Ngrok/Render URL
   const API_BASE = "https://api.gridless-solar.shop/api"; 
   
+  // Data State
   let bookingData = {
-    selected_kit: "Grid-Tied (Bill Reducer)",
-    price: 42000,
-    balcony_direction: sessionStorage.getItem("balcony_direction") || "South",
-    balcony_length: sessionStorage.getItem("balcony_length") || "2.0",
-    floor_number: sessionStorage.getItem("floor_number") || "1",
-    has_plug: sessionStorage.getItem("has_plug") || "true"
+    selected_kit: "",
+    price: 0,
+    balcony_direction: sessionStorage.getItem("balcony_direction"),
+    balcony_length: sessionStorage.getItem("balcony_length"),
+    floor_number: sessionStorage.getItem("floor_number"),
+    has_plug: sessionStorage.getItem("has_plug")
   };
 
+  // On Load
   document.getElementById("displayTier").textContent = sessionStorage.getItem("recommended_tier") || "Standard";
 
   function nextStep(step) {
@@ -199,30 +210,12 @@
     document.querySelectorAll('.kit-option').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
     
+    // Calculate 40% advance for Step 5
     const advance = price * 0.40;
     document.getElementById("advanceAmount").textContent = "₹" + advance.toLocaleString('en-IN');
   }
 
-  function validateStep2() {
-    const railing = document.getElementById("railingPhoto").files[0];
-    const view = document.getElementById("viewPhoto").files[0];
-    if (!railing || !view) {
-      alert("Please choose both railing and outward view photos.");
-      return;
-    }
-    nextStep(3);
-  }
-
-  function validateStep3() {
-    const flat = document.getElementById("flatNumber").value.trim();
-    const address = document.getElementById("fullAddress").value.trim();
-    if (!flat || !address) {
-      alert("Please fill in your flat number and society address.");
-      return;
-    }
-    nextStep(4);
-  }
-
+ // 1. Send OTP Function
   async function sendOTP() {
     const userEmail = document.getElementById("userEmail").value.trim();
     const sendBtn = document.getElementById("sendOtpBtn");
@@ -239,7 +232,7 @@
       const response = await fetch(`${API_BASE}/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        credentials: 'include', // Preserves session cookie
         body: JSON.stringify({ email: userEmail, intent: 'booking' })
       });
       
@@ -258,26 +251,23 @@
     }
   }
 
+  // 2. Verify OTP Function
   async function verifyOTP() {
     const userName = document.getElementById("userName").value.trim();
     const userPhone = document.getElementById("userPhone").value.trim();
     const userEmail = document.getElementById("userEmail").value.trim();
     const otpCode = document.getElementById("otpCode").value.trim();
-    const verifyBtn = document.getElementById("verifyOtpBtn");
 
-    if (!otpCode || otpCode.length < 4) {
+    if (!otpCode) {
       alert("Please enter the 6-digit OTP code sent to your email.");
       return;
     }
-
-    verifyBtn.textContent = "Verifying...";
-    verifyBtn.disabled = true;
 
     try {
       const response = await fetch(`${API_BASE}/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        credentials: 'include', // Preserves session cookie
         body: JSON.stringify({
           email: userEmail,
           code: otpCode,
@@ -290,56 +280,42 @@
       if (response.ok) {
         if (data.token) localStorage.setItem('gridless_token', data.token);
         alert("Identity verified successfully!");
-        nextStep(5);
+        nextStep(5); // Automatically move to Step 5 (Payment)
       } else {
         alert("Verification Failed: " + (data.error || "Invalid OTP"));
       }
     } catch (err) {
       alert("Error verifying code with server.");
-    } finally {
-      verifyBtn.textContent = "Verify & Proceed to Payment";
-      verifyBtn.disabled = false;
     }
   }
 
+  // 3. Razorpay Order & Payment Function
   async function initiatePayment() {
     const btn = document.getElementById("payBtn");
     btn.textContent = "Loading Secure Gateway...";
-    btn.disabled = true;
     
     try {
-      const token = localStorage.getItem('gridless_token') || '';
+      // Create order on backend (session cookie is sent automatically)
       const orderRes = await fetch(`${API_BASE}/create-order`, { 
         method: "POST",
         credentials: 'include',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '' 
-        }
+        headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('gridless_token') || '') }
       });
       
-      const orderData = await orderRes.json();
       if (!orderRes.ok) {
-        throw new Error(orderData.error || "Could not generate payment order. Please re-verify OTP.");
+        throw new Error("Authentication missing. Please re-verify your OTP.");
       }
       
-      if (!orderData.key_id) {
-        throw new Error("Razorpay Key is not configured on backend.");
-      }
-
+      const orderData = await orderRes.json();
+      
+      // 2. Open Razorpay Checkout
       const options = {
-        key: orderData.key_id,
+        key: orderData.key_id, // Dynamically received from backend
         amount: orderData.amount,
         currency: "INR",
         name: "GRIDLESS Solar",
         description: "Site Inspection Fee",
         order_id: orderData.order_id,
-        modal: {
-          ondismiss: function() {
-            btn.textContent = "Pay ₹1 via UPI/Card";
-            btn.disabled = false;
-          }
-        },
         handler: async function (response) {
           btn.textContent = "Uploading Photos & Finalizing...";
           
@@ -349,8 +325,8 @@
           formData.append("floor_number", bookingData.floor_number);
           formData.append("has_plug", bookingData.has_plug);
           formData.append("selected_kit", bookingData.selected_kit);
-          formData.append("full_address", document.getElementById("fullAddress").value.trim());
-          formData.append("flat_number", document.getElementById("flatNumber").value.trim());
+          formData.append("full_address", document.getElementById("fullAddress").value);
+          formData.append("flat_number", document.getElementById("flatNumber").value);
           
           formData.append("railing_image", document.getElementById("railingPhoto").files[0]);
           formData.append("view_image", document.getElementById("viewPhoto").files[0]);
@@ -359,52 +335,36 @@
           formData.append("razorpay_order_id", response.razorpay_order_id);
           formData.append("razorpay_signature", response.razorpay_signature);
           
-          try {
-            const currentToken = localStorage.getItem('gridless_token') || '';
-            const bookRes = await fetch(`${API_BASE}/book`, {
-              method: "POST",
-              credentials: 'include',
-              headers: { 
-                'Authorization': currentToken ? `Bearer ${currentToken}` : '' 
-              },
-              body: formData
-            });
-            
-            const bookData = await bookRes.json();
-            if (bookRes.ok) {
-              localStorage.setItem('gridless_booked', 'true');
-              window.location.href = 'dashboard.html';
-            } else {
-              alert("Payment Succeeded, but booking failed: " + (bookData.error || "Please contact support with Payment ID: " + response.razorpay_payment_id));
-              btn.textContent = "Retry Finalization";
-              btn.disabled = false;
-            }
-          } catch (e) {
-            alert("Network error while submitting booking: " + e.message);
-            btn.textContent = "Retry Finalization";
-            btn.disabled = false;
+          const bookRes = await fetch(`${API_BASE}/book`, {
+            method: "POST",
+            credentials: 'include',
+            headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('gridless_token') || '') },
+            body: formData
+          });
+          
+          if (bookRes.ok) {
+            // Mark this browser as having a paid booking so the Login
+            // button unlocks on the landing page, then go straight to dashboard.
+            localStorage.setItem('gridless_booked', 'true');
+            window.location.href = 'dashboard.html';
+          } else {
+            alert("Payment recorded, but failed to upload booking details. Please contact support.");
           }
         },
         prefill: {
-          name: document.getElementById("userName").value.trim(),
-          email: document.getElementById("userEmail").value.trim(),
-          contact: document.getElementById("userPhone").value.trim()
+          name: document.getElementById("userName").value,
+          email: document.getElementById("userEmail").value,
+          contact: document.getElementById("userPhone").value
         },
         theme: { color: "#1C2321" }
       };
       
       const rzp = new Razorpay(options);
-      rzp.on('payment.failed', function (resp){
-        alert("Payment failed: " + (resp.error.description || "Transaction declined"));
-        btn.textContent = "Pay ₹1 via UPI/Card";
-        btn.disabled = false;
-      });
       rzp.open();
       
     } catch (err) {
       alert(err.message || "Could not load payment gateway.");
-      btn.textContent = "Pay ₹1 via UPI/Card";
-      btn.disabled = false;
+      btn.textContent = "Pay ₹50 via UPI/Card";
     }
   }
 </script>

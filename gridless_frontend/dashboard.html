@@ -29,9 +29,9 @@
   .logo-mark span:nth-child(3){ top:18px; }
   
   .btn-ghost { border:1px solid var(--line); padding:8px 16px; border-radius:2px; font-weight:600; font-size:0.85rem; cursor:pointer; background:none; }
-  .btn-ghost:hover { background:var(--ink); color:var(--paper); }
-
+  
   .wrap { max-width: 1000px; margin: 120px auto 60px; padding: 0 32px; }
+  
   .tracker-box { background: var(--dusk); color: var(--paper); padding: 40px; border-left: 4px solid var(--brass); margin-bottom: 24px; }
   .status-tag { font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--brass); text-transform:uppercase; display:block; margin-bottom:12px; }
   .tracker-box h2 { font-size: 2rem; margin-bottom: 16px; }
@@ -45,7 +45,8 @@
   .detail-row span:last-child { font-weight: 600; text-align: right; }
   
   .support-card { background: var(--paper); border: 1px solid var(--line); padding: 32px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-  .whatsapp-btn { background: #25D366; color: white; text-decoration: none; padding: 14px 24px; font-weight: 600; border-radius: 2px; margin-top: 16px; display: inline-block; width: 100%; }
+  .whatsapp-btn { background: #25D366; color: white; text-decoration: none; padding: 14px 24px; font-weight: 600; border-radius: 2px; margin-top: 16px; display: inline-block; width: 100%; transition: transform 0.2s; }
+  .whatsapp-btn:hover { transform: translateY(-2px); }
   
   @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } .wrap { padding: 0 20px; } }
 </style>
@@ -54,9 +55,9 @@
 
 <nav>
   <div class="nav-inner">
-    <a href="index.html" class="logo">
+    <div class="logo">
       <span class="logo-mark"><span></span><span></span><span></span></span> GRIDLESS
-    </a>
+    </div>
     <button class="btn-ghost" onclick="logout()">Log Out</button>
   </div>
 </nav>
@@ -64,11 +65,11 @@
 <div class="wrap">
   <div class="tracker-box">
     <span class="status-tag">Current Status: <span id="dbStatus">Loading...</span></span>
-    <h2 id="dbHeader">Your Site Inspection is Confirmed.</h2>
-    <p id="dbSubtext">Our team has received your booking fee and balcony photos. We will reach your location to finalize structural feasibility.</p>
+    <h2>Your Site Inspection is Confirmed.</h2>
+    <p>Our team has received your ₹50 booking fee and balcony photos. We will reach your location within the next 1–2 business days to finalize the structural feasibility.</p>
   </div>
   
-  <div class="grid-layout" id="dashboardContent">
+  <div class="grid-layout">
     <div class="info-card">
       <h3>Booking Details</h3>
       <div class="detail-row"><span>Hardware Selected</span><span id="dbKit">...</span></div>
@@ -82,7 +83,8 @@
     
     <div class="support-card">
       <h3 style="border:none; margin-bottom:8px;">Need to reschedule?</h3>
-      <p style="font-size:0.9rem; opacity:0.8; margin-bottom:12px;">Chat directly with our engineering team regarding your site visit.</p>
+      <p style="font-size:0.9rem; opacity:0.8; margin-bottom:12px;">Bypass the email queue and chat directly with our lead engineer regarding your site visit.</p>
+      <!-- Add your business WhatsApp number below -->
       <a href="https://wa.me/918219991871" class="whatsapp-btn" target="_blank">Chat with GRIDLESS on WhatsApp</a>
     </div>
   </div>
@@ -92,20 +94,19 @@
   const API_BASE = "https://api.gridless-solar.shop/api";
   
   async function loadDashboard() {
-    const token = localStorage.getItem('gridless_token') || '';
     try {
       const res = await fetch(`${API_BASE}/me`, {
         credentials: 'include',
-        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+        headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('gridless_token') || '') }
       });
       
-      if (!res.ok) {
-        window.location.href = "index.html";
-        return;
-      }
+      // If server returns 401 Unauthorized, boot them back to the login page
+      if (!res.ok) { window.location.href = "index.html"; return; }
       
       const data = await res.json();
       
+      // If the user has an active booking
+      // If the user has an active booking
       if (data.booking) {
         localStorage.setItem('gridless_booked', 'true');
         document.getElementById("dbEmail").textContent = data.user.email;
@@ -119,34 +120,35 @@
         } else {
             document.getElementById("dbAdvance").textContent = "₹16,800";
         }
-      } else {
-        document.getElementById("dbStatus").textContent = "NO ACTIVE BOOKING";
-        document.getElementById("dbHeader").textContent = `Welcome, ${data.user.name || 'User'}!`;
-        document.getElementById("dbSubtext").textContent = "You haven't completed a site inspection booking yet.";
-        document.getElementById("dashboardContent").innerHTML = `
-          <div class="info-card" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px;">
-            <h3 style="border:none; margin-bottom:12px;">Ready to put your balcony to work?</h3>
-            <p style="opacity:0.8; margin-bottom:24px;">Run a quick feasibility check to choose your kit.</p>
-            <a href="booking.html" style="background:var(--brass); color:var(--paper); padding:12px 24px; text-decoration:none; font-weight:600;">Book Inspection</a>
-          </div>
+      } 
+      // If the user has NO active bookings (Empty State)
+      else {
+        document.getElementById("dbStatus").textContent = "NO ACTIVE BOOKINGS";
+        document.querySelector(".tracker-box h2").textContent = `Welcome, ${data.user.name || 'User'}!`;
+        document.querySelector(".tracker-box p").textContent = "You haven't booked a site inspection yet. Your registered email is " + data.user.email;
+        
+        // Replace the lower grid with a "Start Booking" CTA
+        document.querySelector(".grid-layout").innerHTML = `
+            <div class="info-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+                <h3 style="border: none; margin-bottom: 12px; padding-bottom:0;">Ready to put your balcony to work?</h3>
+                <p style="opacity: 0.8; margin-bottom: 24px;">Run a quick feasibility check to see which solar kit fits your space.</p>
+                <a href="index.html#book" style="background: var(--brass); color: var(--paper); padding: 14px 24px; text-decoration: none; font-weight: 600; border-radius: 2px; display: inline-block;">Start Feasibility Check</a>
+            </div>
         `;
       }
     } catch (e) {
-      alert("Server connection lost.");
+      alert("Lost connection to server.");
     }
   }
 
   async function logout() {
-    try {
-      await fetch(`${API_BASE}/logout`, { method: "POST", credentials: "include" });
-    } catch (e) {}
-    
+    await fetch(`${API_BASE}/logout`, { method: "POST", credentials: "include" });
     localStorage.removeItem('gridless_token');
-    // Keep 'gridless_booked' set to 'true' so 'Login' remains visible on the landing page
-    localStorage.setItem('gridless_booked', 'true');
+    
     window.location.href = "index.html";
   }
 
+  // Load data immediately when page opens
   loadDashboard();
 </script>
 </body>
