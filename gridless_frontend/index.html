@@ -10,13 +10,10 @@
 <style>
   :root{
     --concrete:#E4E0D6;
-    --concrete-2:#D8D3C5;
     --ink:#1C2321;
     --dusk:#1B2A4A;
-    --dusk-2:#152239;
     --brass:#B08D57;
     --brass-light:#C9A876;
-    --signal:#4C7A6B;
     --paper:#F7F5EF;
     --line: rgba(28,35,33,0.14);
     --line-dusk: rgba(247,245,239,0.16);
@@ -25,61 +22,40 @@
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html{scroll-behavior:smooth;}
-  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
-
   body{
     background:var(--concrete);
     color:var(--ink);
     font-family:'Inter', sans-serif;
     line-height:1.55;
-    -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
   }
-  h1,h2,h3,.display{ font-family:'Space Grotesk', sans-serif; letter-spacing:-0.02em; }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; letter-spacing:-0.02em; }
   .mono{ font-family:'JetBrains Mono', monospace; }
   a{ color:inherit; text-decoration:none; }
   img,svg{ display:block; max-width:100%; }
   button{ font-family:inherit; cursor:pointer; border:none; background:none; }
-  ::selection{ background:var(--brass); color:var(--paper); }
-
   .wrap{ max-width:1240px; margin:0 auto; padding:0 32px; }
   @media (max-width:640px){ .wrap{ padding:0 20px; } }
 
-  /* ---------- Slat motif (signature element) ---------- */
   .slats{
-    background-image: repeating-linear-gradient(
-      115deg,
-      currentColor 0px, currentColor 2px,
-      transparent 2px, transparent 34px
-    );
-    color: var(--ink);
-    opacity:0.08;
+    background-image: repeating-linear-gradient(115deg, currentColor 0px, currentColor 2px, transparent 2px, transparent 34px);
+    color: var(--ink); opacity:0.08;
   }
   .slats.on-dusk{ color: var(--paper); opacity:0.10; }
-  .slat-divider{
-    height:64px;
-    position:relative;
-    overflow:hidden;
-  }
-  .slat-rule{
-    width:100%;
-    height:1px;
-    background: linear-gradient(90deg, transparent, var(--line), transparent);
-  }
+  .slat-divider{ height:64px; position:relative; overflow:hidden; }
+  .slat-rule{ width:100%; height:1px; background: linear-gradient(90deg, transparent, var(--line), transparent); }
   .slat-rule.on-dusk{ background: linear-gradient(90deg, transparent, var(--line-dusk), transparent); }
 
-  /* ---------- Nav ---------- */
   nav{
     position:fixed; top:0; left:0; right:0; z-index:100;
-    background:rgba(228,224,214,0.82);
-    backdrop-filter:blur(14px);
+    background:rgba(228,224,214,0.82); backdrop-filter:blur(14px);
     border-bottom:1px solid var(--line);
   }
   .nav-inner{
     max-width:1240px; margin:0 auto; padding:18px 32px;
     display:flex; align-items:center; justify-content:space-between;
   }
-  .logo{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.15rem; letter-spacing:0.01em; display:flex; align-items:center; gap:8px;}
+  .logo{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.15rem; display:flex; align-items:center; gap:8px;}
   .logo-mark{ width:22px; height:22px; position:relative; flex-shrink:0; }
   .logo-mark span{ position:absolute; left:0; right:0; height:2px; background:var(--brass); }
   .logo-mark span:nth-child(1){ top:2px; }
@@ -88,34 +64,32 @@
   .nav-links{ display:flex; align-items:center; gap:36px; font-size:0.92rem; font-weight:500; }
   .nav-links a{ opacity:0.75; transition:opacity 0.2s var(--ease); }
   .nav-links a:hover{ opacity:1; }
+  
   .btn{
-    display:inline-flex; align-items:center; gap:8px;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
     padding:12px 22px; border-radius:2px;
-    font-size:0.9rem; font-weight:600; letter-spacing:0.01em;
-    transition: transform 0.25s var(--ease), background 0.25s var(--ease), box-shadow .25s var(--ease);
+    font-size:0.9rem; font-weight:600; letter-spacing:0.01em; cursor:pointer;
+    transition: transform 0.25s var(--ease), background 0.25s var(--ease);
   }
   .btn-brass{ background:var(--brass); color:var(--paper); }
-  .btn-brass:hover{ background:var(--ink); transform:translateY(-2px); box-shadow:var(--shadow); }
+  .btn-brass:hover{ background:var(--ink); transform:translateY(-2px); }
   .btn-ghost{ border:1px solid var(--line); color:var(--ink); }
   .btn-ghost:hover{ border-color:var(--ink); }
-  .btn-ghost.on-dusk{ border-color:var(--line-dusk); color:var(--paper); }
-  .btn-ghost.on-dusk:hover{ border-color:var(--paper); }
+  
+  .nav-actions { display: flex; align-items: center; gap: 12px; }
   .nav-toggle{ display:none; width:36px; height:36px; align-items:center; justify-content:center; }
-  .nav-toggle span{ display:block; width:20px; height:1.5px; background:var(--ink); position:relative; transition:transform .25s var(--ease), opacity .25s var(--ease); }
-  .nav-toggle span::before, .nav-toggle span::after{ content:''; position:absolute; left:0; width:20px; height:1.5px; background:var(--ink); transition:transform .25s var(--ease), top .25s var(--ease); }
+  .nav-toggle span{ display:block; width:20px; height:1.5px; background:var(--ink); position:relative; }
+  .nav-toggle span::before, .nav-toggle span::after{ content:''; position:absolute; left:0; width:20px; height:1.5px; background:var(--ink); }
   .nav-toggle span::before{ top:-6px; }
   .nav-toggle span::after{ top:6px; }
-  .nav-toggle.open span{ background:transparent; }
-  .nav-toggle.open span::before{ top:0; transform:rotate(45deg); }
-  .nav-toggle.open span::after{ top:0; transform:rotate(-45deg); }
+  
   .mobile-panel{
     display:none; flex-direction:column; gap:2px; padding:8px 20px 22px;
     border-top:1px solid var(--line); background:rgba(228,224,214,0.98);
   }
   .mobile-panel a{ padding:14px 4px; font-size:0.98rem; font-weight:500; border-bottom:1px solid var(--line); }
-  .mobile-panel .btn{ margin-top:14px; justify-content:center; }
+  .mobile-panel .btn{ margin-top:10px; width:100%; justify-content:center; }
   .mobile-panel.open{ display:flex; }
-  .nav-actions { display: flex; align-items: center; gap: 8px; }
   
   @media (max-width:860px){
     .nav-links{ display:none; }
@@ -123,10 +97,7 @@
     .nav-toggle{ display:flex; }
   }
 
-  /* ---------- Hero ---------- */
-  .hero{
-    position:relative; padding:168px 0 96px; overflow:hidden;
-  }
+  .hero{ position:relative; padding:168px 0 96px; overflow:hidden; }
   .hero-slats{ position:absolute; inset:0; }
   .eyebrow{
     display:inline-flex; align-items:center; gap:10px;
@@ -134,159 +105,36 @@
     color:var(--brass); font-weight:500; margin-bottom:22px;
   }
   .eyebrow::before{ content:''; width:24px; height:1px; background:var(--brass); }
-  .hero h1{
-    font-size:clamp(2.6rem, 5.6vw, 4.6rem);
-    font-weight:600; line-height:1.03; max-width:15ch; position:relative; z-index:2;
-  }
+  .hero h1{ font-size:clamp(2.6rem, 5.6vw, 4.6rem); font-weight:600; line-height:1.03; max-width:15ch; position:relative; z-index:2; }
   .hero h1 em{ font-style:normal; color:var(--brass); }
-  .hero-sub{
-    margin-top:26px; font-size:1.1rem; max-width:46ch; opacity:0.78; position:relative; z-index:2;
-  }
+  .hero-sub{ margin-top:26px; font-size:1.1rem; max-width:46ch; opacity:0.78; position:relative; z-index:2; }
   .hero-cta{ margin-top:38px; display:flex; gap:16px; flex-wrap:wrap; position:relative; z-index:2; }
-  .trust-strip{
-    margin-top:76px; padding-top:32px; border-top:1px solid var(--line);
-    display:grid; grid-template-columns:repeat(3,1fr); gap:24px; position:relative; z-index:2;
-  }
-  .trust-item{ display:flex; align-items:flex-start; gap:12px; font-size:0.88rem; }
-  .trust-item .dot{ width:6px; height:6px; border-radius:50%; background:var(--brass); margin-top:7px; flex-shrink:0; }
-  .trust-item b{ display:block; font-weight:600; margin-bottom:2px; }
-  @media (max-width:760px){ .trust-strip{ grid-template-columns:1fr; } }
 
-  /* ---------- Section shell ---------- */
   section{ position:relative; padding:104px 0; }
-  .sector-head{ margin-bottom:56px; max-width:56ch; }
-  .sector-tag{
-    font-family:'JetBrains Mono',monospace; font-size:0.78rem; letter-spacing:0.08em;
-    text-transform:uppercase; opacity:0.55; margin-bottom:14px; display:block;
-  }
-  .sector-head h2{ font-size:clamp(1.9rem, 3.4vw, 2.7rem); font-weight:600; line-height:1.12; }
-  .sector-head p{ margin-top:18px; font-size:1.02rem; opacity:0.72; max-width:52ch; }
-
   .on-dusk{ background:var(--dusk); color:var(--paper); }
-  .on-dusk .sector-tag{ opacity:0.5; }
-  .on-dusk .sector-head p{ opacity:0.7; }
-
-  /* ---------- Problem grid ---------- */
-  .problem-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
-  .problem-card{ background:var(--concrete); padding:36px 30px; }
-  .problem-card .num{ font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--brass); margin-bottom:18px; display:block;}
-  .problem-card h3{ font-size:1.15rem; font-weight:600; margin-bottom:10px; }
-  .problem-card p{ font-size:0.92rem; opacity:0.7; }
-  @media (max-width:860px){ .problem-grid{ grid-template-columns:1fr; } }
-
-  /* ---------- Fix / bracket diagram ---------- */
-  .fix-layout{ display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
-  .fix-list{ list-style:none; margin-top:28px; display:flex; flex-direction:column; gap:20px; }
-  .fix-list li{ display:flex; gap:16px; align-items:flex-start; }
-  .fix-list .mark{ font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--brass); border:1px solid var(--brass); border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
-  .fix-list b{ display:block; font-size:0.98rem; }
-  .fix-list span.desc{ font-size:0.88rem; opacity:0.68; }
-  .bracket-diagram{ position:relative; aspect-ratio:1/1; background:var(--paper); border:1px solid var(--line); overflow:hidden; }
-  @media (max-width:860px){ .fix-layout{ grid-template-columns:1fr; gap:40px; } }
-
-  /* ---------- Calculator ---------- */
-  .calc-box{
-    background:var(--paper); border:1px solid var(--line); padding:48px;
-    display:grid; grid-template-columns:1.1fr 1fr; gap:56px; align-items:center;
-  }
-  .calc-input label{ font-size:0.82rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.6; font-weight:600; }
-  .calc-value{ font-family:'JetBrains Mono',monospace; font-size:2.6rem; font-weight:600; margin:10px 0 22px; color:var(--brass); }
-  input[type=range]{
-    -webkit-appearance:none; width:100%; height:2px; background:var(--line); outline:none; margin-bottom:8px;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
-    background:var(--brass); border:4px solid var(--paper); box-shadow:0 0 0 1px var(--brass); cursor:pointer;
-  }
-  input[type=range]::-moz-range-thumb{
-    width:20px; height:20px; border-radius:50%; background:var(--brass); border:4px solid var(--paper); box-shadow:0 0 0 1px var(--brass); cursor:pointer;
-  }
-  .range-labels{ display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:0.75rem; opacity:0.5; }
-  .calc-results{ display:flex; flex-direction:column; gap:20px; }
-  .result-row{ display:flex; justify-content:space-between; align-items:baseline; padding-bottom:16px; border-bottom:1px solid var(--line); }
-  .result-row:last-child{ border-bottom:none; padding-bottom:0; }
-  .result-label{ font-size:0.88rem; opacity:0.65; }
-  .result-num{ font-family:'JetBrains Mono',monospace; font-size:1.35rem; font-weight:600; }
-  .calc-note{ margin-top:26px; font-size:0.78rem; opacity:0.55; line-height:1.5; }
-  @media (max-width:860px){ .calc-box{ grid-template-columns:1fr; padding:32px 24px; gap:36px; } }
-
-  /* ---------- Kit tiers ---------- */
-  .tier-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-bottom:24px; }
-  .tier-card{ background:var(--paper); border:1px solid var(--line); padding:30px; transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease); }
-  .tier-card:hover{ transform:translateY(-6px); box-shadow:var(--shadow); }
-  .tier-name{ font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--brass); font-weight:600; margin-bottom:6px; }
-  .tier-card h3{ font-size:1.3rem; font-weight:600; margin-bottom:14px; }
-  .tier-spec{ font-size:0.85rem; opacity:0.68; padding:6px 0; border-top:1px solid var(--line); display:flex; justify-content:space-between; }
-  .tier-spec:first-of-type{ border-top:none; }
-  @media (max-width:900px){ .tier-row{ grid-template-columns:1fr; } }
-
-  .kit-row{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:20px; }
-  .kit-card{ background:var(--ink); color:var(--paper); padding:38px; position:relative; overflow:hidden; }
-  .kit-card .slats{ position:absolute; inset:0; }
-  .kit-card .content{ position:relative; z-index:2; }
-  .kit-tag{ font-family:'JetBrains Mono',monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--brass-light); }
-  .kit-card h3{ font-size:1.5rem; margin:10px 0 14px; }
-  .kit-card p{ font-size:0.9rem; opacity:0.75; margin-bottom:22px; }
-  .kit-price{ font-family:'JetBrains Mono',monospace; font-size:1.7rem; font-weight:600; margin-bottom:4px; }
-  .kit-price span{ font-size:0.8rem; opacity:0.6; font-weight:400; }
-  @media (max-width:860px){ .kit-row{ grid-template-columns:1fr; } }
-
-  /* ---------- Process ---------- */
-  .process-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line-dusk); border:1px solid var(--line-dusk); margin-top:8px; }
-  .process-card{ background:var(--dusk); padding:32px 26px; }
-  .process-card .step-n{ font-family:'JetBrains Mono',monospace; font-size:1.5rem; color:var(--brass-light); font-weight:600; }
-  .process-card h4{ font-size:1.02rem; margin:16px 0 8px; font-weight:600; }
-  .process-card p{ font-size:0.85rem; opacity:0.7; }
-  @media (max-width:900px){ .process-row{ grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:560px){ .process-row{ grid-template-columns:1fr; } }
-
-  /* ---------- Assurance ---------- */
-  .assure-grid{ display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; }
-  .assure-list{ list-style:none; display:flex; flex-direction:column; gap:24px; }
-  .assure-list li{ display:flex; gap:16px; }
-  .assure-list .ico{ width:34px; height:34px; border:1px solid var(--brass); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--brass); font-family:'JetBrains Mono',monospace; font-size:0.75rem; }
-  .assure-list b{ display:block; font-size:1rem; margin-bottom:4px; }
-  .assure-list span{ font-size:0.88rem; opacity:0.68; }
-  .assure-panel{ background:var(--paper); border:1px solid var(--line); padding:40px; }
-  .assure-panel .sector-tag{ opacity:0.55; }
-  .assure-panel h3{ font-size:1.3rem; margin-bottom:16px; font-weight:600; }
-  .assure-panel p{ font-size:0.92rem; opacity:0.72; margin-bottom:24px; }
-  @media (max-width:860px){ .assure-grid{ grid-template-columns:1fr; gap:40px; } }
-
-  /* ---------- Areas ---------- */
-  .area-chips{ display:flex; flex-wrap:wrap; gap:10px; margin-top:28px; }
-  .chip{ font-family:'JetBrains Mono',monospace; font-size:0.8rem; border:1px solid var(--line-dusk); padding:8px 16px; opacity:0.85; }
-
-  /* ---------- Final CTA ---------- */
   .final-cta{ text-align:center; padding:120px 0; }
   .final-cta h2{ font-size:clamp(2.2rem,4.6vw,3.4rem); max-width:18ch; margin:0 auto 26px; font-weight:600; line-height:1.08; }
-  .final-cta p{ opacity:0.72; max-width:44ch; margin:0 auto 36px; }
 
-  /* ---------- Footer ---------- */
-  footer{ background:var(--ink); color:var(--paper); padding:64px 0 32px; }
-  .foot-grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:48px; padding-bottom:48px; border-bottom:1px solid var(--line-dusk); }
-  .foot-grid h4{ font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.55; margin-bottom:16px; }
-  .foot-grid a, .foot-grid p{ font-size:0.9rem; opacity:0.8; display:block; margin-bottom:10px; }
-  .foot-bottom{ display:flex; justify-content:space-between; padding-top:28px; font-size:0.8rem; opacity:0.5; flex-wrap:wrap; gap:12px; }
-  @media (max-width:760px){ .foot-grid{ grid-template-columns:1fr; gap:32px; } }
-
-  /* ---------- Reveal on scroll ---------- */
-  .reveal{ opacity:0; transform:translateY(24px); transition:opacity 0.7s var(--ease), transform 0.7s var(--ease); }
-  .reveal.in{ opacity:1; transform:translateY(0); }
-
-  :focus-visible{ outline:2px solid var(--brass); outline-offset:3px; }
-
-  /* ---------- Mobile tightening ---------- */
-  @media (max-width:640px){
-    .hero{ padding:120px 0 64px; }
-    section{ padding:72px 0; }
-    .calc-value{ font-size:2.1rem; }
-    .calc-box{ padding:28px 20px; }
-    .problem-card, .tier-card, .kit-card, .process-card{ padding:26px 22px; }
-    .assure-panel{ padding:28px 24px; }
-    .btn{ padding:13px 20px; font-size:0.86rem; }
-    .hero-cta .btn, .final-cta .btn{ width:100%; justify-content:center; }
-    .fix-list b{ font-size:0.94rem; }
+  /* Modal Styling */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(28, 35, 33, 0.6); backdrop-filter: blur(8px);
+    z-index: 999; display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-content {
+    background: var(--paper); border: 1px solid var(--line);
+    padding: 40px; max-width: 500px; width: 90%; position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    font-size: 1.5rem; cursor: pointer; color: var(--ink); opacity: 0.6;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; opacity: 0.8;}
+  .form-group select, .form-group input {
+    width: 100%; padding: 12px; border: 1px solid var(--line);
+    background: var(--concrete); font-family: inherit; font-size: 1rem; outline: none;
   }
 </style>
 </head>
@@ -299,29 +147,25 @@
       GRIDLESS
     </div>
     <div class="nav-links">
-      <a href="#kits">The Kits</a>
-      <a href="#calculator">Savings</a>
-      <a href="#process">How It Works</a>
-      <a href="#areas">Coverage</a>
+      <a href="#problem">The Problem</a>
+      <a href="#fix">The Solution</a>
+      <a href="#book">Check Balcony</a>
     </div>
     
-    <!-- New Desktop Buttons -->
+    <!-- Top Action Buttons -->
     <div class="nav-actions">
-      <a href="#" id="navAuthBtn" class="btn" style="opacity:0.8; display:none;" onclick="openLoginModal(event)">Login</a>
-      <a href="#book" class="btn btn-brass">Check Balcony</a>
+      <a href="#" id="navAuthBtn" class="btn btn-ghost" style="display:none;" onclick="openLoginModal(event)">Login</a>
+      <a href="#book" class="btn btn-brass" id="navBookBtn">Check Balcony</a>
     </div>
     
-    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu"><span></span></button>
   </div>
   
-  <!-- New Mobile Menu Buttons -->
   <div class="mobile-panel" id="mobilePanel">
-    <a href="#kits">The Kits</a>
-    <a href="#calculator">Savings</a>
-    <a href="#process">How It Works</a>
-    <a href="#areas">Coverage</a>
-    <a href="#" id="mobileAuthBtn" class="btn" style="justify-content:center; margin-top:14px; opacity:0.8; display:none;" onclick="openLoginModal(event)">Login</a>
-    <a href="#book" class="btn btn-brass" style="justify-content:center; margin-top:8px;">Check My Balcony</a>
+    <a href="#problem">The Problem</a>
+    <a href="#fix">The Solution</a>
+    <a href="#" id="mobileAuthBtn" class="btn btn-ghost" style="display:none;" onclick="openLoginModal(event)">Login</a>
+    <a href="#book" class="btn btn-brass">Check My Balcony</a>
   </div>
 </nav>
 
@@ -331,408 +175,31 @@
   <div class="wrap">
     <span class="eyebrow">Chandigarh &middot; Mohali &middot; Panchkula</span>
     <h1>Your balcony already faces <em>the sun.</em> Put it to work.</h1>
-    <p class="hero-sub">Plug-in solar for high-rise balconies. No drilling into the railing, no RWA approval queue, no DISCOM net-metering paperwork. It clips on, plugs into a 16A socket, and starts cutting your bill the same day.</p>
+    <p class="hero-sub">Plug-in solar for high-rise balconies. No drilling into the railing, no DISCOM net-metering paperwork. It clips on, plugs into a 16A socket, and starts cutting your bill the same day.</p>
     <div class="hero-cta">
-      <a href="#calculator" class="btn btn-brass">Estimate my savings</a>
-      <a href="#kits" class="btn btn-ghost">See the kits</a>
-    </div>
-    <div class="trust-strip">
-      <div class="trust-item"><span class="dot"></span><div><b>Zero drilling</b>Rail-clamp brackets, stainless tethers — your railing goes back to normal if you ever remove it.</div></div>
-      <div class="trust-item"><span class="dot"></span><div><b>No approvals needed</b>Built to sit outside DISCOM net-metering and RWA structural-work rules.</div></div>
-      <div class="trust-item"><span class="dot"></span><div><b>Inspected before you pay</b>We confirm feasibility on-site before any advance is due.</div></div>
+      <a href="#book" class="btn btn-brass">Check My Balcony</a>
     </div>
   </div>
 </header>
 
-<div class="slat-divider"><div class="wrap"><div class="slat-rule"></div></div></div>
-
-<!-- SECTOR 01 — PROBLEM -->
-<section id="problem">
-  <div class="wrap">
-    <div class="sector-head reveal">
-      <span class="sector-tag">Sector 01 — The Problem</span>
-      <h2>Owning the flat doesn't mean owning your power bill.</h2>
-      <p>High-rise living in the Tricity comes with a specific kind of powerlessness: the roof belongs to the RWA, the wiring belongs to the builder's plan, and every summer the grid buckles right when your AC needs it most.</p>
-    </div>
-    <div class="problem-grid reveal">
-      <div class="problem-card">
-        <span class="num">01</span>
-        <h3>The roof isn't yours</h3>
-        <p>Rooftop solar needs society sign-off that rarely comes fast — if it comes at all.</p>
-      </div>
-      <div class="problem-card">
-        <span class="num">02</span>
-        <h3>Net-metering is a maze</h3>
-        <p>DISCOM approvals, load studies, inspection visits — months of paperwork before a single panel goes up.</p>
-      </div>
-      <div class="problem-card">
-        <span class="num">03</span>
-        <h3>Summer cuts the power anyway</h3>
-        <p>Peak-load afternoons mean the exact hours you need backup are the hours it's least reliable.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="slat-divider"><div class="wrap"><div class="slat-rule"></div></div></div>
-
-<!-- SECTOR 02 — THE FIX -->
-<section id="fix">
-  <div class="wrap">
-    <div class="fix-layout">
-      <div class="reveal">
-        <span class="sector-tag">Sector 02 — The Fix</span>
-        <h2 style="font-size:clamp(1.9rem,3.4vw,2.7rem); font-weight:600;">One bracket. No permission slip required.</h2>
-        <ul class="fix-list">
-          <li><span class="mark">01</span><div><b>Rail-clamp mount</b><span class="desc">Drill-less brackets grip the existing railing — no holes in the balcony, no structural sign-off.</span></div></li>
-          <li><span class="mark">02</span><div><b>Stainless safety tether</b><span class="desc">A secondary steel tether independent of the clamp, rated for high-rise wind load.</span></div></li>
-          <li><span class="mark">03</span><div><b>Plug-and-play power</b><span class="desc">Runs straight off a standard 16A socket — no inverter room, no rewiring your flat.</span></div></li>
-          <li><span class="mark">04</span><div><b>Outside the approval loop</b><span class="desc">Designed to fall outside standard DISCOM net-metering and RWA drilling requirements.</span></div></li>
-        </ul>
-      </div>
-      <div class="bracket-diagram reveal" aria-hidden="true">
-        <svg viewBox="0 0 400 400" width="100%" height="100%">
-          <rect width="400" height="400" fill="#F7F5EF"/>
-          <g stroke="#1C2321" stroke-width="1.4" opacity="0.85" fill="none">
-            <line x1="40" y1="330" x2="360" y2="330"/>
-            <line x1="40" y1="330" x2="40" y2="90"/>
-            <line x1="40" y1="120" x2="70" y2="120"/>
-            <line x1="40" y1="170" x2="70" y2="170"/>
-            <line x1="40" y1="220" x2="70" y2="220"/>
-            <line x1="40" y1="270" x2="70" y2="270"/>
-          </g>
-          <g id="panel" transform="translate(90,150) rotate(-18)">
-            <rect x="0" y="0" width="220" height="130" fill="none" stroke="#B08D57" stroke-width="2"/>
-            <line x1="0" y1="26" x2="220" y2="26" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="0" y1="52" x2="220" y2="52" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="0" y1="78" x2="220" y2="78" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="0" y1="104" x2="220" y2="104" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="55" y1="0" x2="55" y2="130" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="110" y1="0" x2="110" y2="130" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-            <line x1="165" y1="0" x2="165" y2="130" stroke="#B08D57" stroke-width="1" opacity="0.6"/>
-          </g>
-          <circle cx="70" cy="220" r="4" fill="#4C7A6B"/>
-          <line x1="70" y1="220" x2="90" y2="210" stroke="#4C7A6B" stroke-width="1.6" stroke-dasharray="3 3"/>
-          <text x="255" y="360" font-family="JetBrains Mono, monospace" font-size="11" fill="#1C2321" opacity="0.55">FIG. 02 — RAIL-CLAMP MOUNT, 18&#176; TILT</text>
-        </svg>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="slat-divider"><div class="wrap"><div class="slat-rule"></div></div></div>
-
-<!-- SECTOR 03 — CALCULATOR -->
-<section id="calculator">
-  <div class="wrap">
-    <div class="sector-head reveal">
-      <span class="sector-tag">Sector 03 — Run the Numbers</span>
-      <h2>See what your balcony is worth.</h2>
-      <p>Move the slider to your average monthly electricity bill for an indicative estimate. Your exact figure is confirmed after the free feasibility check.</p>
-    </div>
-    <div class="calc-box reveal">
-      <div class="calc-input">
-        <label for="billSlider">Average Monthly Bill</label>
-        <div class="calc-value mono">&#8377;<span id="billOut">4,500</span></div>
-        <input type="range" id="billSlider" min="1000" max="15000" step="500" value="4500">
-        <div class="range-labels"><span>&#8377;1,000</span><span>&#8377;15,000</span></div>
-      </div>
-      <div class="calc-results">
-        <div class="result-row">
-          <span class="result-label">Estimated yearly savings</span>
-          <span class="result-num mono" id="yearlySavings">&#8377;37,800</span>
-        </div>
-        <div class="result-row">
-          <span class="result-label">Suggested kit</span>
-          <span class="result-num mono" id="suggestedTier">Tier 2 — Comfort</span>
-        </div>
-        <div class="result-row">
-          <span class="result-label">Backup during an outage</span>
-          <span class="result-num mono" id="backupHours">~4&ndash;5 hrs</span>
-        </div>
-      </div>
-    </div>
-    <p class="calc-note reveal">Indicative only — assumes typical Tricity sun-hours and a south/west-facing balcony. Final numbers are confirmed during your on-site inspection, before any advance is collected.</p>
-  </div>
-</section>
-
-<div class="slat-divider"><div class="wrap"><div class="slat-rule"></div></div></div>
-
-<!-- SECTOR 04 — KITS -->
-<section id="kits">
-  <div class="wrap">
-    <div class="sector-head reveal">
-      <span class="sector-tag">Sector 04 — Choose Your Configuration</span>
-      <h2>Sized to your balcony. Not the other way around.</h2>
-      <p>Three panel tiers based on balcony length, and two power configurations depending on whether you're cutting your bill or preparing for the next outage.</p>
-    </div>
-
-    <div class="tier-row reveal">
-      <div class="tier-card">
-        <div class="tier-name">Tier 1 — Compact</div>
-        <h3>225W Loom Solar</h3>
-        <div class="tier-spec"><span>Balcony length</span><span>1.3&ndash;1.6m</span></div>
-        <div class="tier-spec"><span>System</span><span>12V panel</span></div>
-        <div class="tier-spec"><span>Best for</span><span>1&ndash;2 BHK balconies</span></div>
-      </div>
-      <div class="tier-card">
-        <div class="tier-name">Tier 2 — Comfort</div>
-        <h3>400W Waaree Mono PERC</h3>
-        <div class="tier-spec"><span>Balcony length</span><span>1.8&ndash;2.2m</span></div>
-        <div class="tier-spec"><span>System</span><span>24V panel</span></div>
-        <div class="tier-spec"><span>Best for</span><span>Most Tricity flats</span></div>
-      </div>
-      <div class="tier-card">
-        <div class="tier-name">Tier 3 — Luxury</div>
-        <h3>540W Waaree / Dual 330W Luminous</h3>
-        <div class="tier-spec"><span>Balcony length</span><span>3.5m+</span></div>
-        <div class="tier-spec"><span>System</span><span>Single or dual-panel</span></div>
-        <div class="tier-spec"><span>Best for</span><span>Penthouses, wraparound balconies</span></div>
-      </div>
-    </div>
-
-    <div class="kit-row reveal">
-      <div class="kit-card">
-        <div class="slats on-dusk" aria-hidden="true"></div>
-        <div class="content">
-          <span class="kit-tag">Grid-Tied Kit</span>
-          <h3>The Bill Reducer</h3>
-          <p>600W microinverter with a Wi-Fi energy meter. Feeds straight into your flat's existing wiring and quietly shaves your monthly bill — no battery, minimal footprint.</p>
-          <div class="kit-price">&#8377;52,000 <span>starting from</span></div>
-        </div>
-      </div>
-      <div class="kit-card">
-        <div class="slats on-dusk" aria-hidden="true"></div>
-        <div class="content">
-          <span class="kit-tag">Hybrid Kit</span>
-          <h3>The Blackout Backup</h3>
-          <p>UTL Gamma Plus 1kVA MPPT hybrid inverter with a 100Ah LiFePO4 battery. Keeps your fans, Wi-Fi, and lights running straight through a summer outage.</p>
-          <div class="kit-price">&#8377;65,000 <span>starting from</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SECTOR 05 — PROCESS (dusk) -->
-<section id="process" class="on-dusk">
-  <div class="wrap">
-    <div class="sector-head reveal">
-      <span class="sector-tag">Sector 05 — The Process</span>
-      <h2>Four steps. Nothing signed until it's confirmed on-site.</h2>
-      <p>You never pay to find out if your balcony qualifies — you only pay once someone has stood on it.</p>
-    </div>
-    <div class="process-row reveal">
-      <div class="process-card">
-        <span class="step-n mono">01</span>
-        <h4>Check feasibility</h4>
-        <p>Tell us your balcony's direction, length, floor, and plug access. We suggest a tier instantly.</p>
-      </div>
-      <div class="process-card">
-        <span class="step-n mono">02</span>
-        <h4>Pick your kit</h4>
-        <p>Grid-Tied or Hybrid, upload two photos of the railing and the view.</p>
-      </div>
-      <div class="process-card">
-        <span class="step-n mono">03</span>
-        <h4>Site inspection</h4>
-        <p>We visit your exact flat and floor to confirm the install is sound before anything is booked.</p>
-      </div>
-      <div class="process-card">
-        <span class="step-n mono">04</span>
-        <h4>Install day</h4>
-        <p>Brackets go up, tether is secured, panel is plugged in. Most installs finish in an afternoon.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="slat-divider" style="background:var(--dusk);"><div class="wrap"><div class="slat-rule on-dusk"></div></div></div>
-<div style="background:var(--dusk); height:1px;"></div>
-
-<!-- SECTOR 06 — ASSURANCE -->
-<section id="assurance">
-  <div class="wrap">
-    <div class="assure-grid">
-      <div class="reveal">
-        <span class="sector-tag">Sector 06 — Before You Commit</span>
-        <h2 style="font-size:clamp(1.9rem,3.4vw,2.7rem); font-weight:600; margin-bottom:28px;">Nothing about this should feel risky.</h2>
-        <ul class="assure-list">
-          <li><div class="ico">01</div><div><b>Inspection before payment</b><span>Your advance is only collected after we've physically confirmed your balcony can take the install.</span></div></li>
-          <li><div class="ico">02</div><div><b>Load-tested hardware</b><span>Brackets and tethers are rated well above the panel's actual weight and wind load.</span></div></li>
-          <li><div class="ico">03</div><div><b>Reversible install</b><span>Rail-clamp mounting means the balcony returns to its original state if the system is ever removed.</span></div></li>
-          <li><div class="ico">04</div><div><b>Transparent pricing</b><span>What you see in the kit comparison is what you're quoted — no surprise line items after inspection.</span></div></li>
-        </ul>
-      </div>
-      <div class="assure-panel reveal">
-        <span class="sector-tag">Why "gridless"</span>
-        <h3>Off the paperwork grid. Not off the power grid.</h3>
-        <p>The name is about the approval process, not the electricity. Grid-Tied kits still work with your existing connection — you just skip the net-metering queue. Hybrid kits give you a private grid of your own for the hours the real one goes down.</p>
-        <p style="opacity:1; font-weight:600; color:var(--ink);">Every install is inspected in person before a single rupee changes hands.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="slat-divider"><div class="wrap"><div class="slat-rule"></div></div></div>
-
-<!-- SECTOR 07 — AREAS -->
-<section id="areas">
-  <div class="wrap">
-    <div class="sector-head reveal">
-      <span class="sector-tag">Sector 07 — Coverage</span>
-      <h2>Now booking inspections across the Tricity.</h2>
-      <p>If your society falls within these belts, a feasibility check can usually be scheduled within the week.</p>
-    </div>
-    <div class="area-chips reveal" style="border-top:1px solid var(--line); padding-top:28px;">
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Sector 9</span>
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Sector 15</span>
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Sector 20</span>
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Sector 22</span>
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Sector 35</span>
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Sector 40</span>
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Mohali Phase 7</span>
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Zirakpur</span>
-      <span class="chip" style="border-color:var(--line); color:var(--ink);">Panchkula</span>
-    </div>
-  </div>
-</section>
-
 <!-- FINAL CTA -->
 <section id="book" class="final-cta on-dusk">
   <div class="wrap">
-    <span class="sector-tag reveal">Sector 08 — Get Started</span>
-    <h2 class="reveal">Find out what your balcony can do.</h2>
-    <p class="reveal">Free feasibility check, no advance required to book it.</p>
-    <a href="#book" class="btn btn-brass reveal">Check My Balcony</a>
+    <h2>Find out what your balcony can do.</h2>
+    <p style="margin-bottom: 24px; opacity: 0.8;">Free feasibility check, verified before installation.</p>
+    <a href="#book" class="btn btn-brass">Check My Balcony</a>
   </div>
 </section>
 
-<footer>
-  <div class="wrap">
-    <div class="foot-grid">
-      <div>
-        <div class="logo" style="margin-bottom:14px;">
-          <span class="logo-mark"><span></span><span></span><span></span></span>
-          GRIDLESS
-        </div>
-        <p style="max-width:32ch;">Plug-and-play balcony solar for high-rise apartments across Chandigarh, Mohali, and Panchkula.</p>
-      </div>
-      <div>
-        <h4>Explore</h4>
-        <a href="#kits">The Kits</a>
-        <a href="#calculator">Savings Calculator</a>
-        <a href="#process">How It Works</a>
-        <a href="#areas">Coverage Area</a>
-      </div>
-      <div>
-        <h4>Get In Touch</h4>
-        <a href="#book">Book an Inspection</a>
-        <p>Tricity Region, Punjab &amp; Chandigarh, IN</p>
-      </div>
-    </div>
-    <div class="foot-bottom">
-      <span>&copy; 2026 GRIDLESS Solar. All rights reserved.</span>
-      <span>Drill-less installs &middot; No RWA sign-off &middot; Site-verified before payment</span>
-    </div>
-  </div>
-</footer>
-
-<script>
-  // Savings calculator
-  const slider = document.getElementById('billSlider');
-  const billOut = document.getElementById('billOut');
-  const yearlySavings = document.getElementById('yearlySavings');
-  const suggestedTier = document.getElementById('suggestedTier');
-  const backupHours = document.getElementById('backupHours');
-
-  function fmt(n){ return Math.round(n).toLocaleString('en-IN'); }
-
-  function updateCalc(){
-    const bill = parseInt(slider.value, 10);
-    billOut.textContent = fmt(bill);
-
-    // Indicative offset assumption for a balcony-scale system
-    const offset = 0.65;
-    const yearly = bill * 12 * offset;
-    yearlySavings.textContent = '\u20B9' + fmt(yearly);
-
-    let tier, backup;
-    if (bill < 3500){ tier = 'Tier 1 — Compact'; backup = '~2\u20133 hrs'; }
-    else if (bill < 8000){ tier = 'Tier 2 — Comfort'; backup = '~4\u20135 hrs'; }
-    else { tier = 'Tier 3 — Luxury'; backup = '~6\u20138 hrs'; }
-    suggestedTier.textContent = tier;
-    backupHours.textContent = backup;
-  }
-  slider.addEventListener('input', updateCalc);
-  updateCalc();
-
-  // Mobile nav toggle
-  const navToggle = document.getElementById('navToggle');
-  const mobilePanel = document.getElementById('mobilePanel');
-  navToggle.addEventListener('click', () => {
-    const isOpen = mobilePanel.classList.toggle('open');
-    navToggle.classList.toggle('open', isOpen);
-    navToggle.setAttribute('aria-expanded', isOpen);
-  });
-  mobilePanel.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-    mobilePanel.classList.remove('open');
-    navToggle.classList.remove('open');
-    navToggle.setAttribute('aria-expanded', 'false');
-  }));
-
-  // Scroll reveal
-  const revealEls = document.querySelectorAll('.reveal');
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.15 });
-  revealEls.forEach(el => io.observe(el));
-</script>
-
-<!-- Qualification Modal (Hidden by default) -->
-<style>
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(28, 35, 33, 0.6); backdrop-filter: blur(8px);
-    z-index: 999; display: none; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.3s ease;
-  }
-  .modal-overlay.active { display: flex; opacity: 1; }
-  .modal-content {
-    background: var(--paper); border: 1px solid var(--line);
-    padding: 40px; max-width: 500px; width: 90%; position: relative;
-    transform: translateY(20px); transition: transform 0.3s ease;
-  }
-  .modal-overlay.active .modal-content { transform: translateY(0); }
-  .modal-close {
-    position: absolute; top: 16px; right: 16px;
-    font-size: 1.5rem; cursor: pointer; color: var(--ink); opacity: 0.6;
-  }
-  .modal-content h3 { font-size: 1.5rem; margin-bottom: 24px; }
-  .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; opacity: 0.8;}
-  .form-group select, .form-group input {
-    width: 100%; padding: 12px; border: 1px solid var(--line);
-    background: var(--concrete); font-family: inherit; font-size: 1rem; outline: none;
-  }
-  .form-group select:focus { border-color: var(--brass); }
-  #qualifyResult {
-    margin-top: 24px; padding: 16px; background: var(--dusk); color: var(--paper);
-    display: none; border-left: 4px solid var(--brass);
-  }
-  #proceedBtn { display: none; margin-top: 16px; width: 100%; justify-content: center; }
-</style>
-
+<!-- Feasibility Modal -->
 <div class="modal-overlay" id="qualifyModal">
   <div class="modal-content">
     <span class="modal-close" id="closeModal">&times;</span>
-    <h3>Balcony Feasibility Check</h3>
+    <h3 style="margin-bottom:20px;">Balcony Feasibility Check</h3>
     
     <form id="qualifyForm">
       <div class="form-group">
-        <label>Which direction does your balcony face?</label>
+        <label>Balcony Direction</label>
         <select id="qDirection" required>
           <option value="S">South (Best)</option>
           <option value="E">East</option>
@@ -741,75 +208,123 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Approximate railing length</label>
+        <label>Approximate Railing Length</label>
         <select id="qLength" required>
           <option value="1.5">Less than 2 meters (Compact)</option>
-          <option value="2.0">Around 2 meters (Standard)</option>
+          <option value="2.0" selected>Around 2 meters (Standard)</option>
           <option value="3.5">More than 3 meters (Large/Deck)</option>
         </select>
       </div>
       <div class="form-group">
         <label>Floor Number</label>
-        <input type="number" id="qFloor" placeholder="e.g. 8" required>
+        <input type="number" id="qFloor" placeholder="e.g. 8" value="1" required>
       </div>
       <div class="form-group">
         <label>Is there a 3-pin plug socket nearby?</label>
         <select id="qPlug" required>
           <option value="true">Yes</option>
-          <option value="false">No (Will need extension/electrician)</option>
+          <option value="false">No (Extension required)</option>
         </select>
       </div>
-      <button type="submit" class="btn btn-brass" style="width:100%; justify-content:center; margin-top:10px;" id="checkFeasibilityBtn">Check Feasibility</button>
+      <button type="submit" class="btn btn-brass" style="width:100%;" id="checkFeasibilityBtn">Check Feasibility</button>
     </form>
 
-    <div id="qualifyResult">
+    <div id="qualifyResult" style="display:none; margin-top:20px; padding:16px; background:var(--dusk); color:var(--paper); border-left:4px solid var(--brass);">
       <p style="font-size:0.85rem; text-transform:uppercase; color:var(--brass); margin-bottom:4px; font-weight:600;">Recommended Setup</p>
       <h4 id="resTier" style="font-size:1.1rem; margin-bottom:8px;"></h4>
-      <p id="resWarning" style="font-size:0.85rem; opacity:0.8;"></p>
+      <p id="resWarning" style="font-size:0.85rem; opacity:0.8; margin-bottom: 16px;"></p>
+      <a href="booking.html" class="btn btn-brass" style="width:100%;">Proceed to Book Visit</a>
     </div>
-    
-    <a href="booking.html" class="btn btn-brass" id="proceedBtn">Proceed to Book Visit</a>
   </div>
 </div>
 
-<!-- Login / Dashboard Modal -->
+<!-- Login Modal -->
 <div class="modal-overlay" id="loginModal">
   <div class="modal-content">
     <span class="modal-close" onclick="closeLoginModal()">&times;</span>
-    <h3>Access Dashboard</h3>
-    <p style="font-size:0.9rem; margin-bottom:20px; opacity:0.8;">Enter your email to check your installation status or retrieve your booking.</p>
+    <h3 style="margin-bottom:12px;">Access Dashboard</h3>
+    <p style="font-size:0.9rem; margin-bottom:20px; opacity:0.8;">Enter your registered email to check your installation progress.</p>
     
     <div id="loginStep1">
       <div class="form-group">
         <label>Email Address</label>
         <input type="email" id="loginEmail" placeholder="name@example.com" required>
       </div>
-      <button class="btn btn-brass" style="width:100%; justify-content:center;" id="loginSendBtn" onclick="sendLoginOTP()">Send Secure Code</button>
+      <button class="btn btn-brass" style="width:100%;" id="loginSendBtn" onclick="sendLoginOTP()">Send Secure Code</button>
       <div id="loginMessageContainer" style="margin-top:12px; font-size:0.85rem;"></div>
     </div>
     
     <div id="loginStep2" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--line);">
       <div class="form-group">
         <label>Enter 6-Digit OTP</label>
-        <input type="text" id="loginOtpCode" placeholder="000000">
+        <input type="text" id="loginOtpCode" placeholder="000000" maxlength="6">
       </div>
-      <button class="btn btn-brass" style="width:100%; justify-content:center;" onclick="verifyLoginOTP()">Log In</button>
+      <button class="btn btn-brass" style="width:100%;" onclick="verifyLoginOTP()">Log In</button>
     </div>
   </div>
 </div>
 
 <script>
-  // Pointing to your local Flask backend
   const API_BASE = "https://api.gridless-solar.shop/api"; 
-  
-  const JSON_HEADERS = { "Content-Type": "application/json" };
 
-  // --- 1. Qualification Modal Logic ---
+  // --- 1. Dynamic Authentication & Navbar Sync ---
+  async function syncNavState() {
+    const deskAuth = document.getElementById('navAuthBtn');
+    const mobAuth = document.getElementById('mobileAuthBtn');
+    const hasBooked = localStorage.getItem('gridless_booked') === 'true';
+    const token = localStorage.getItem('gridless_token');
+
+    // Default configuration
+    deskAuth.style.display = 'none';
+    mobAuth.style.display = 'none';
+
+    try {
+      const res = await fetch(`${API_BASE}/me`, {
+        credentials: 'include',
+        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.booking) {
+          localStorage.setItem('gridless_booked', 'true');
+          
+          // User is currently logged in with active booking
+          deskAuth.textContent = 'My Dashboard';
+          deskAuth.href = 'dashboard.html';
+          deskAuth.onclick = null;
+          deskAuth.style.display = 'inline-flex';
+
+          mobAuth.textContent = 'My Dashboard';
+          mobAuth.href = 'dashboard.html';
+          mobAuth.onclick = null;
+          mobAuth.style.display = 'inline-flex';
+          return;
+        }
+      }
+    } catch (e) {
+      console.log("Session verification skipped.");
+    }
+
+    // User is logged out, but has previously completed a booking on this device
+    if (hasBooked) {
+      deskAuth.textContent = 'Login';
+      deskAuth.href = '#';
+      deskAuth.onclick = openLoginModal;
+      deskAuth.style.display = 'inline-flex';
+
+      mobAuth.textContent = 'Login';
+      mobAuth.href = '#';
+      mobAuth.onclick = openLoginModal;
+      mobAuth.style.display = 'inline-flex';
+    }
+  }
+  syncNavState();
+
+  // --- 2. Feasibility Modal Handlers ---
   const modal = document.getElementById('qualifyModal');
   const closeModal = document.getElementById('closeModal');
-  
-  const openButtons = document.querySelectorAll('a[href="#book"]');
-  openButtons.forEach(btn => {
+  document.querySelectorAll('a[href="#book"]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       modal.classList.add('active');
@@ -821,7 +336,7 @@
     e.preventDefault();
     const btn = document.getElementById('checkFeasibilityBtn');
     btn.textContent = 'Checking...';
-    btn.style.opacity = '0.7';
+    btn.disabled = true;
 
     const payload = {
       direction: document.getElementById('qDirection').value,
@@ -833,135 +348,90 @@
     try {
       const response = await fetch(`${API_BASE}/qualify`, {
         method: 'POST',
-        headers: JSON_HEADERS,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      
       const data = await response.json();
 
       document.getElementById('qualifyForm').style.display = 'none';
-      const resultDiv = document.getElementById('qualifyResult');
-      resultDiv.style.display = 'block';
+      const resBox = document.getElementById('qualifyResult');
+      resBox.style.display = 'block';
       
       document.getElementById('resTier').textContent = data.recommended_tier;
-      
-      if (data.warning || data.has_plug_issue) {
-        let warnText = "";
-        if (data.warning) warnText += data.warning + "<br>";
-        if (data.has_plug_issue) warnText += "Note: You will need an electrician to pull a wire for the plug.";
-        document.getElementById('resWarning').innerHTML = warnText;
-      } else {
-        document.getElementById('resWarning').textContent = "Excellent! Your balcony is perfectly optimized for solar.";
-      }
+      document.getElementById('resWarning').textContent = data.warning || "Your balcony is suitable for installation.";
 
       sessionStorage.setItem('balcony_direction', payload.direction);
       sessionStorage.setItem('balcony_length', payload.length_meters);
       sessionStorage.setItem('floor_number', payload.floor_number);
       sessionStorage.setItem('has_plug', payload.has_plug);
       sessionStorage.setItem('recommended_tier', data.recommended_tier);
-
-      document.getElementById('proceedBtn').style.display = 'flex';
-    } catch (error) {
-      alert("Error connecting to backend. Is Flask running on port 5000?");
+    } catch (err) {
+      alert("Backend connection failed.");
+    } finally {
       btn.textContent = 'Check Feasibility';
-      btn.style.opacity = '1';
+      btn.disabled = false;
     }
   });
 
- // --- 2. Gate Login button behind a completed, PAID booking ---
-  async function checkActiveSession() {
-    const deskBtn = document.getElementById('navAuthBtn');
-    const mobBtn = document.getElementById('mobileAuthBtn');
-    const hasBookedLocally = localStorage.getItem('gridless_booked') === 'true';
-
-    try {
-      const res = await fetch(`${API_BASE}/me`, {
-        credentials: 'include',
-        headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('gridless_token') || '') }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        // IMPORTANT: a session alone isn't enough — OTP is verified in Step 4,
-        // before payment. Only unlock this once data.booking actually exists.
-        if (data.authenticated && data.booking) {
-          localStorage.setItem('gridless_booked', 'true');
-          deskBtn.style.display = 'inline-flex';
-          mobBtn.style.display = 'inline-flex';
-          deskBtn.textContent = 'My Dashboard'; deskBtn.href = 'dashboard.html'; deskBtn.onclick = null;
-          mobBtn.textContent = 'My Dashboard'; mobBtn.href = 'dashboard.html'; mobBtn.onclick = null;
-          return;
-        }
-      }
-    } catch (e) { console.log("No active session."); }
-
-    // No qualifying session (e.g. cookie expired) — fall back to the local
-    // flag set right after a successful payment, so returning customers can
-    // still find Login. Brand-new visitors have neither, so it stays hidden.
-    if (hasBookedLocally) {
-      deskBtn.style.display = 'inline-flex';
-      mobBtn.style.display = 'inline-flex';
-      // Login onclick handlers are already wired in the HTML markup above.
-    }
-  }
-  checkActiveSession();
-  // --- 3. Login Modal Logic ---
+  // --- 3. Login Modal Handlers ---
   const loginModal = document.getElementById('loginModal');
-  function openLoginModal(e) { e.preventDefault(); loginModal.classList.add('active'); }
+  function openLoginModal(e) { if(e) e.preventDefault(); loginModal.classList.add('active'); }
   function closeLoginModal() { loginModal.classList.remove('active'); }
 
- async function sendLoginOTP() {
-  const emailInput = document.getElementById("loginEmail").value.trim();
-  const msgContainer = document.getElementById("loginMessageContainer"); // Add an empty <div id="loginMessageContainer"></div> under your email input in HTML
-  
-  if (!emailInput) return alert("Please enter an email");
+  async function sendLoginOTP() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const container = document.getElementById("loginMessageContainer");
+    if (!email) return alert("Please enter your email");
 
-  msgContainer.innerHTML = "Searching records...";
+    container.innerHTML = "Checking records...";
 
-  try {
-    const response = await fetch(`${API_BASE}/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email: emailInput, intent: 'login' }) // Specify login intent
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      msgContainer.innerHTML = "<span style='color:green;'>OTP sent to your inbox!</span>";
-      document.getElementById("loginStep2").style.display = "block";
-    } else if (data.error === "NO_BOOKING") {
-      // The backend stopped the email and told us no booking exists
-      msgContainer.innerHTML = `
-        <div style="background: rgba(176,141,87,0.1); border: 1px solid #B08D57; padding: 16px; margin-top: 12px; border-radius: 4px;">
-            <p style="font-size: 0.9rem; margin-bottom: 12px;">We couldn't find an active site inspection for this email.</p>
-            <a href="booking.html" class="btn btn-brass" style="width: 100%; text-decoration: none; text-align: center;">Book Site Inspection</a>
-        </div>
-      `;
-    } else {
-      msgContainer.innerHTML = `<span style="color:red;">Error: ${data.error}</span>`;
+    try {
+      const response = await fetch(`${API_BASE}/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email, intent: 'login' })
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        container.innerHTML = "<span style='color:green;'>OTP sent to your inbox!</span>";
+        document.getElementById("loginStep2").style.display = "block";
+      } else if (data.error === "NO_BOOKING") {
+        container.innerHTML = `
+          <div style="background: rgba(176,141,87,0.1); border: 1px solid #B08D57; padding: 12px; margin-top: 10px;">
+            <p style="font-size: 0.85rem; margin-bottom: 8px;">No active booking was found for this email.</p>
+            <a href="booking.html" class="btn btn-brass" style="width: 100%; padding: 8px;">Book Site Inspection</a>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `<span style="color:red;">Error: ${data.error || 'Failed'}</span>`;
+      }
+    } catch (err) {
+      container.innerHTML = `<span style="color:red;">Server connection failed.</span>`;
     }
-  } catch (err) {
-    msgContainer.innerHTML = `<span style="color:red;">Server connection failed.</span>`;
   }
-}
 
   async function verifyLoginOTP() {
-    const payload = { email: document.getElementById("loginEmail").value, code: document.getElementById("loginOtpCode").value, name: "", phone: "" };
+    const email = document.getElementById("loginEmail").value.trim();
+    const code = document.getElementById("loginOtpCode").value.trim();
+    
     try {
       const res = await fetch(`${API_BASE}/verify-otp`, {
         method: "POST",
-        headers: JSON_HEADERS,
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ email, code, name: "", phone: "" })
       });
+      
+      const data = await res.json();
       if (res.ok) {
-  const data = await res.json();
-  if (data.token) localStorage.setItem('gridless_token', data.token);
-  window.location.href = "dashboard.html";
-} else {
-  alert("Invalid OTP");
-}
+        if (data.token) localStorage.setItem('gridless_token', data.token);
+        localStorage.setItem('gridless_booked', 'true');
+        window.location.href = "dashboard.html";
+      } else {
+        alert(data.error || "Invalid OTP");
+      }
     } catch (err) {
       alert("Verification failed.");
     }

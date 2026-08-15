@@ -29,10 +29,14 @@ load_dotenv()
 # Initialize Flask App
 app = Flask(__name__)
 
+# Initialize Razorpay Client
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 
 razorpay_client = razorpay.Client(
-    auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
+    auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)
 )
+
 # --- Configuration ---
 app.config.from_object(Config)
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
@@ -46,29 +50,21 @@ def issue_token(user_id):
     return serializer.dumps({"user_id": user_id})
 
 def get_authenticated_user_id():
-    """Checks Authorization: Bearer <token> first (works cross-site),
-    falls back to the session cookie (works same-site / local dev)."""
+    """Checks Authorization: Bearer <token> first, falls back to session cookie."""
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
-        token = auth_header.split(" ", 1)[1]
-        try:
-            data = serializer.loads(token, max_age=60 * 60 * 24 * 30)  # 30 days
-            return data.get("user_id")
-        except (BadSignature, SignatureExpired):
-            return None
+        token = auth_header.split(" ", 1)[1].strip()
+        if token and token != "null" and token != "undefined":
+            try:
+                data = serializer.loads(token, max_age=60 * 60 * 24 * 30)  # 30 days
+                return data.get("user_id")
+            except (BadSignature, SignatureExpired):
+                pass
     return session.get("user_id")
 
 def get_authenticated_user_id_strict():
-    """Bearer token only (no cookie fallback). Protects state-changing routes against CSRF."""
-    auth_header = request.headers.get("Authorization", "")
-    if auth_header.startswith("Bearer "):
-        token = auth_header.split(" ", 1)[1]
-        try:
-            data = serializer.loads(token, max_age=60 * 60 * 24 * 30)
-            return data.get("user_id")
-        except (BadSignature, SignatureExpired):
-            return None
-    return None
+    """Checks Bearer token first, falls back to session if valid."""
+    return get_authenticated_user_id()
 
 def admin_required(f):
     @wraps(f)
@@ -87,8 +83,14 @@ CORS(app, supports_credentials=True, origins=[
     "https://www.gridless-solar.shop",
     "https://gridless-solar.vercel.app", 
     "http://localhost:8000",
-    "http://127.0.0.1:8000"
-])
+    "http://127.0.0.1:8000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000"
+], allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"])
 
 @app.after_request
 def set_security_headers(resp):
@@ -104,21 +106,21 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
-ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
-MAX_BYTES = 5 * 1024 * 1024  # 5MB
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"}
+MAX_BYTES = 15 * 1024 * 1024  # Expanded to 15MB for high-res mobile photos
 
 def validate_image(file_storage):
-    if not file_storage or file_storage.mimetype not in ALLOWED_MIME:
+    if not file_storage or not file_storage.filename:
+        return False
+    ext = os.path.splitext(file_storage.filename)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS and not (file_storage.mimetype and file_storage.mimetype.startswith("image/")):
         return False
     file_storage.stream.seek(0, os.SEEK_END)
     size = file_storage.stream.tell()
     file_storage.stream.seek(0)
     return size <= MAX_BYTES
-# --- Helper Functions ---
+
 def upload_balcony_image(file_storage, user_id, image_type):
-    """
-    Configures and uploads image stream directly to Cloudinary.
-    """
     cloudinary.config(
         cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
         api_key=os.getenv("CLOUDINARY_API_KEY"),
@@ -135,9 +137,7 @@ def upload_balcony_image(file_storage, user_id, image_type):
         overwrite=True,
         resource_type="image"
     )
-    
     return upload_result.get("secure_url")
-
 
 # ==========================================
 # ROUTE 1: QUALIFICATION WIZARD
@@ -145,12 +145,13 @@ def upload_balcony_image(file_storage, user_id, image_type):
 @app.route("/api/qualify", methods=["POST"])
 def qualify_balcony():
     data = request.json or {}
-    
     direction = data.get("direction", "").upper()
-    length = float(data.get("length_meters", 0))
+    try:
+        length = float(data.get("length_meters", 0))
+    except (ValueError, TypeError):
+        length = 2.0
     has_plug = data.get("has_plug", True)
     
-    # Sizing Logic Mapping
     if length < 1.6:
         recommended_tier = "Compact (225W Loom Solar)"
     elif 1.6 <= length <= 2.5:
@@ -169,7 +170,6 @@ def qualify_balcony():
         "has_plug_issue": not has_plug
     }), 200
 
-
 # ==========================================
 # ROUTE 2: AUTHENTICATION & BREVO OTP
 # ==========================================
@@ -178,24 +178,20 @@ def qualify_balcony():
 def send_otp():
     data = request.json or {}
     email = data.get("email", "").strip().lower()
-    intent = data.get("intent", "login") # Defaults to 'login' for safety
+    intent = data.get("intent", "login")
     
     if not email:
         return jsonify({"error": "Email is required"}), 400
         
-    # --- SMART ROUTING: Protect the Brevo API Limits ---
     if intent == "login":
-        # 1. Check if user exists at all
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "NO_BOOKING", "message": "No account found."}), 404
             
-        # 2. Check if user actually has a recorded booking
         booking = Booking.query.filter_by(user_id=user.id).first()
         if not booking:
             return jsonify({"error": "NO_BOOKING", "message": "No active booking found."}), 404
 
-    # --- Proceed to Generate & Send OTP ---
     otp_code = str(random.randint(100000, 999999))
     
     otp_entry = OTP.query.filter_by(email=email).first()
@@ -251,12 +247,10 @@ def verify_otp():
     if not email or not code:
         return jsonify({"error": "Email and OTP code are required"}), 400
     
-    # 1. Verify code against DB
     record = OTP.query.filter_by(email=email, code=code).first()
     if not record or record.expires_at < datetime.utcnow():
         return jsonify({"error": "Invalid or expired OTP"}), 400
         
-    # 2. Create or update User record
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(email=email, name=name, phone=phone)
@@ -265,11 +259,9 @@ def verify_otp():
         if name: user.name = name
         if phone: user.phone = phone
         
-    db.session.delete(record) # Delete OTP so it cannot be reused
+    db.session.delete(record)
     db.session.commit()
     
-    
-   # 3. Session cookie (works when not blocked) + portable token (always works)
     session["user_id"] = user.id
     token = issue_token(user.id)
     
@@ -280,11 +272,34 @@ def verify_otp():
     }), 200
 
 # ==========================================
-# ROUTE 3: SITE INSPECTION BOOKING & UPLOADS
+# ROUTE 3: CREATE RAZORPAY ORDER
+# ==========================================
+@app.route("/api/create-order", methods=["POST"])
+def create_order():
+    user_id = get_authenticated_user_id()
+    if not user_id:
+        return jsonify({"error": "Authentication required. Please verify with OTP first."}), 401
+        
+    try:
+        order = razorpay_client.order.create({
+            "amount": 100,  # ₹1.00 (100 paise)
+            "currency": "INR",
+            "payment_capture": 1
+        })
+        return jsonify({
+            "order_id": order["id"], 
+            "amount": 100,
+            "key_id": os.getenv("RAZORPAY_KEY_ID")
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Razorpay Order Creation Failed: {str(e)}"}), 500
+
+# ==========================================
+# ROUTE 4: SITE INSPECTION BOOKING & UPLOADS
 # ==========================================
 @app.route("/api/book", methods=["POST"])
 def create_booking():
-    user_id = get_authenticated_user_id_strict()
+    user_id = get_authenticated_user_id()
     if not user_id:
         return jsonify({"error": "Authentication required before booking"}), 401
         
@@ -292,10 +307,13 @@ def create_booking():
     if not user:
         return jsonify({"error": "User record not found"}), 404
         
-    # --- RAZORPAY VERIFICATION ---
+    # Verify Razorpay Signature
     razorpay_payment_id = request.form.get("razorpay_payment_id")
     razorpay_order_id = request.form.get("razorpay_order_id")
     razorpay_signature = request.form.get("razorpay_signature")
+    
+    if not razorpay_payment_id or not razorpay_order_id or not razorpay_signature:
+        return jsonify({"error": "Missing payment signature details"}), 400
     
     try:
         razorpay_client.utility.verify_payment_signature({
@@ -304,17 +322,19 @@ def create_booking():
             'razorpay_signature': razorpay_signature
         })
     except Exception as e:
-        return jsonify({"error": "Payment verification failed"}), 400
+        return jsonify({"error": f"Payment signature verification failed: {str(e)}"}), 400
 
-    # --- SAVE DATA ---
-    balcony_direction = request.form.get("balcony_direction")
-    balcony_length = request.form.get("balcony_length")
-    floor_number = request.form.get("floor_number")
+    balcony_direction = request.form.get("balcony_direction") or "South"
+    balcony_length = request.form.get("balcony_length") or "2.0"
+    floor_number = request.form.get("floor_number") or "1"
     has_plug = request.form.get("has_plug", "true").lower() == "true"
-    selected_kit = request.form.get("selected_kit")
+    selected_kit = request.form.get("selected_kit") or "Grid-Tied (Bill Reducer)"
     
-    full_address = request.form.get("full_address")
-    flat_number = request.form.get("flat_number")
+    full_address = request.form.get("full_address", "").strip()
+    flat_number = request.form.get("flat_number", "").strip()
+    
+    if not full_address or not flat_number:
+        return jsonify({"error": "Address details are required"}), 400
     
     railing_file = request.files.get("railing_image")
     view_file = request.files.get("view_image")
@@ -323,10 +343,13 @@ def create_booking():
         return jsonify({"error": "Both railing and view photos are required"}), 400
         
     if not validate_image(railing_file) or not validate_image(view_file):
-        return jsonify({"error": "Images must be JPEG, PNG, or WEBP under 5MB"}), 400
+        return jsonify({"error": "Images must be in JPEG, PNG, WEBP, or HEIC format and under 15MB"}), 400
         
-    railing_url = upload_balcony_image(railing_file, user_id, "railing")
-    view_url = upload_balcony_image(view_file, user_id, "view")
+    try:
+        railing_url = upload_balcony_image(railing_file, user_id, "railing")
+        view_url = upload_balcony_image(view_file, user_id, "view")
+    except Exception as e:
+        return jsonify({"error": f"Image upload failed: {str(e)}"}), 500
     
     new_booking = Booking(
         user_id=user.id,
@@ -339,7 +362,7 @@ def create_booking():
         flat_number=flat_number,
         railing_image_url=railing_url,
         view_image_url=view_url,
-        status="Inspection Fee Paid" # Updated status
+        status="Site Inspection Fee Paid"
     )
     
     db.session.add(new_booking)
@@ -350,87 +373,6 @@ def create_booking():
         "booking_id": new_booking.id,
         "status": new_booking.status
     }), 201
-
-# ==========================================
-# ROUTE 4: ADMIN DASHBOARD CONTROL
-# ==========================================
-VALID_STATUSES = [
-    "Site Inspection Remaining",
-    "Advance Paid",
-    "Setup Done",
-    "Full Payment Paid"
-]
-
-@app.route("/api/admin/bookings", methods=["GET"])
-@admin_required
-def get_all_bookings():
-    bookings = Booking.query.order_by(Booking.created_at.desc()).all()
-    
-    results = []
-    for b in bookings:
-        user = User.query.get(b.user_id)
-        results.append({
-            "booking_id": b.id,
-            "client_name": user.name if user else "N/A",
-            "client_email": user.email if user else "N/A",
-            "client_phone": user.phone if user else "N/A",
-            "full_address": b.full_address,
-            "flat_number": b.flat_number,
-            "floor_number": b.floor_number,
-            "selected_kit": b.selected_kit,
-            "railing_image": b.railing_image_url,
-            "view_image": b.view_image_url,
-            "status": b.status,
-            "created_at": b.created_at.strftime("%Y-%m-%d %H:%M")
-        })
-        
-    return jsonify({"bookings": results}), 200
-
-
-@app.route("/api/admin/booking/<int:booking_id>/status", methods=["PATCH"])
-@admin_required
-def update_status(booking_id):
-    data = request.json or {}
-    new_status = data.get("status")
-    
-    if new_status not in VALID_STATUSES:
-        return jsonify({"error": f"Invalid status. Must be one of {VALID_STATUSES}"}), 400
-        
-    booking = Booking.query.get(booking_id)
-    if not booking:
-        return jsonify({"error": "Booking record not found"}), 404
-        
-    booking.status = new_status
-    db.session.commit()
-    
-    return jsonify({"message": "Status updated successfully", "new_status": booking.status}), 200
-
-# ==========================================
-# ROUTE: CREATE RAZORPAY ORDER
-# ==========================================
-@app.route("/api/create-order", methods=["POST"])
-def create_order():
-    user_id = get_authenticated_user_id_strict()
-    if not user_id:
-        return jsonify({"error": "Authentication required"}), 401
-        
-    try:
-        # Amount is in paise (5000 paise = ₹50)
-        order = razorpay_client.order.create({
-            "amount": 100,
-            "currency": "INR",
-            "payment_capture": 1
-        })
-        return jsonify({
-            "order_id": order["id"], 
-            "amount": 100,
-            "key_id": os.environ.get("RAZORPAY_KEY_ID")  # Dynamically return key
-        }), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-
 
 # ==========================================
 # ROUTE 5: GET CURRENT USER & DASHBOARD DATA
@@ -445,7 +387,6 @@ def get_current_user():
     if not user:
         return jsonify({"authenticated": False}), 404
         
-    # Fetch the user's most recent booking
     latest_booking = Booking.query.filter_by(user_id=user.id).order_by(Booking.created_at.desc()).first()
     
     booking_data = None
