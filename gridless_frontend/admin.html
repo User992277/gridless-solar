@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — GRIDLESS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --concrete:#E4E0D6; --ink:#1C2321; --dusk:#1B2A4A;
+    --brass:#B08D57; --paper:#F7F5EF; --line: rgba(28,35,33,0.14);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--concrete); color:var(--ink); font-family:'Inter',sans-serif; line-height:1.5; }
+  h1,h2,h3{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.02em; }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+
+  nav{ background:var(--dusk); color:var(--paper); padding:18px 32px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+  .logo{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.1rem; }
+  .btn-ghost{ border:1px solid rgba(247,245,239,0.35); color:var(--paper); background:none; padding:8px 16px; border-radius:2px; font-weight:600; font-size:0.85rem; cursor:pointer; }
+
+  .wrap{ max-width:1100px; margin:0 auto; padding:32px; }
+
+  /* Login card */
+  .login-card{ max-width:400px; margin:100px auto; background:var(--paper); border:1px solid var(--line); padding:40px; }
+  .login-card h2{ font-size:1.4rem; margin-bottom:8px; }
+  .login-card p{ font-size:0.9rem; opacity:0.7; margin-bottom:24px; }
+  input{ width:100%; padding:12px 14px; border:1px solid var(--line); font-family:'Inter',sans-serif; font-size:0.95rem; margin-bottom:12px; background:#fff; }
+  .btn{ width:100%; padding:12px; background:var(--brass); color:var(--paper); border:none; font-weight:600; font-size:0.9rem; cursor:pointer; border-radius:2px; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .msg{ font-size:0.85rem; margin-top:8px; }
+  .msg.err{ color:#b91c1c; }
+  .msg.ok{ color:#15803d; }
+
+  /* Dashboard */
+  .stats{ display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+  .stat{ background:var(--paper); border:1px solid var(--line); padding:16px 20px; min-width:140px; }
+  .stat .num{ font-size:1.6rem; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+  .stat .lbl{ font-size:0.78rem; opacity:0.65; text-transform:uppercase; letter-spacing:0.03em; }
+
+  .client-card{ background:var(--paper); border:1px solid var(--line); padding:24px; margin-bottom:16px; }
+  .client-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .client-head h3{ font-size:1.15rem; }
+  .client-head .sub{ font-size:0.85rem; opacity:0.65; margin-top:2px; }
+  .status-badge{ font-family:'JetBrains Mono',monospace; font-size:0.72rem; padding:4px 10px; border:1px solid var(--brass); color:var(--brass); text-transform:uppercase; }
+
+  .detail-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:18px; font-size:0.88rem; }
+  .detail-grid .k{ opacity:0.6; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.02em; margin-bottom:2px; }
+
+  .imgs{ display:flex; gap:10px; margin-bottom:18px; }
+  .imgs a{ font-size:0.8rem; color:var(--dusk); text-decoration:underline; }
+
+  .control-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; border-top:1px solid var(--line); padding-top:16px; }
+  .field{ flex:1; min-width:150px; }
+  .field label{ display:block; font-size:0.75rem; opacity:0.6; text-transform:uppercase; margin-bottom:4px; }
+  .field select, .field input{ margin-bottom:0; padding:10px 12px; }
+  .save-btn{ background:var(--dusk); color:var(--paper); border:none; padding:10px 18px; font-weight:600; font-size:0.85rem; cursor:pointer; border-radius:2px; white-space:nowrap; }
+  .del-btn{ background:none; border:1px solid #b91c1c; color:#b91c1c; padding:10px 16px; font-size:0.85rem; font-weight:600; cursor:pointer; border-radius:2px; white-space:nowrap; }
+
+  .empty{ text-align:center; padding:60px 20px; opacity:0.6; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">GRIDLESS <span class="mono" style="opacity:0.6; font-size:0.8rem;">/ admin</span></div>
+  <button class="btn-ghost" id="logoutBtn" style="display:none;" onclick="adminLogout()">Log Out</button>
+</nav>
+
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div class="login-card" id="loginCard">
+    <h2>Admin Access</h2>
+    <p>Sign in with your admin email to manage clients.</p>
+    <div id="step1">
+      <input type="email" id="adminEmail" placeholder="admin@email.com">
+      <button class="btn" id="sendOtpBtn" onclick="sendAdminOTP()">Send Code</button>
+    </div>
+    <div id="step2" style="display:none; margin-top:14px;">
+      <input type="text" id="adminOtp" placeholder="6-digit code" maxlength="6">
+      <button class="btn" onclick="verifyAdminOTP()">Verify & Enter</button>
+    </div>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" style="display:none;">
+    <div class="stats" id="stats"></div>
+    <div id="clientList"></div>
+  </div>
+
+</div>
+
+<script>
+  const API_BASE = "https://api.gridless-solar.shop/api";
+  const TOKEN_KEY = "gridless_admin_token";
+
+  const STATUSES = [
+    "Inspection Fee Paid",
+    "Inspection Scheduled",
+    "Advance Paid",
+    "Installation Pending",
+    "Installation Completed"
+  ];
+
+  function authHeaders() {
+    return { 'Authorization': 'Bearer ' + (localStorage.getItem(TOKEN_KEY) || '') };
+  }
+
+  // ---------- Auth ----------
+  async function sendAdminOTP() {
+    const email = document.getElementById("adminEmail").value.trim();
+    const msg = document.getElementById("loginMsg");
+    if (!email) { msg.className = "msg err"; msg.textContent = "Enter an email."; return; }
+    msg.className = "msg"; msg.textContent = "Sending code...";
+    try {
+      const res = await fetch(`${API_BASE}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, intent: "admin" })
+      });
+      if (res.ok) {
+        document.getElementById("step2").style.display = "block";
+        msg.className = "msg ok"; msg.textContent = "Code sent. Check your inbox.";
+      } else {
+        const data = await res.json().catch(() => ({}));
+        msg.className = "msg err"; msg.textContent = data.message || "Failed to send code.";
+      }
+    } catch (e) {
+      msg.className = "msg err"; msg.textContent = "Network error.";
+    }
+  }
+
+  async function verifyAdminOTP() {
+    const email = document.getElementById("adminEmail").value.trim();
+    const code = document.getElementById("adminOtp").value.trim();
+    const msg = document.getElementById("loginMsg");
+    try {
+      const res = await fetch(`${API_BASE}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code, name: "", phone: "" })
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem(TOKEN_KEY, data.token);
+        checkAdminAccess();
+      } else {
+        msg.className = "msg err"; msg.textContent = "Invalid code.";
+      }
+    } catch (e) {
+      msg.className = "msg err"; msg.textContent = "Verification failed.";
+    }
+  }
+
+  async function checkAdminAccess() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/admin/bookings`, { headers: authHeaders() });
+      if (res.status === 403) {
+        document.getElementById("loginMsg").className = "msg err";
+        document.getElementById("loginMsg").textContent = "This account is not an admin.";
+        localStorage.removeItem(TOKEN_KEY);
+        return;
+      }
+      if (!res.ok) return; // stay on login, token invalid/expired
+      const data = await res.json();
+      document.getElementById("loginCard").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("logoutBtn").style.display = "inline-block";
+      renderDashboard(data.bookings);
+    } catch (e) { /* stay on login */ }
+  }
+
+  function adminLogout() {
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.reload();
+  }
+
+  // ---------- Dashboard ----------
+  function renderDashboard(bookings) {
+    const stats = document.getElementById("stats");
+    const counts = {};
+    STATUSES.forEach(s => counts[s] = 0);
+    bookings.forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
+
+    stats.innerHTML = `
+      <div class="stat"><div class="num">${bookings.length}</div><div class="lbl">Total Clients</div></div>
+      ${STATUSES.map(s => `<div class="stat"><div class="num">${counts[s]}</div><div class="lbl">${s}</div></div>`).join("")}
+    `;
+
+    const list = document.getElementById("clientList");
+    if (!bookings.length) {
+      list.innerHTML = `<div class="empty">No bookings yet.</div>`;
+      return;
+    }
+
+    list.innerHTML = bookings.map(b => `
+      <div class="client-card" id="card-${b.booking_id}">
+        <div class="client-head">
+          <div>
+            <h3>${escapeHtml(b.client_name)}</h3>
+            <div class="sub">${escapeHtml(b.client_email)} · ${escapeHtml(b.client_phone || 'No phone')}</div>
+          </div>
+          <span class="status-badge">${escapeHtml(b.status)}</span>
+        </div>
+
+        <div class="detail-grid">
+          <div><div class="k">Kit</div>${escapeHtml(b.selected_kit)}</div>
+          <div><div class="k">Address</div>${escapeHtml(b.flat_number)}, ${escapeHtml(b.full_address)}</div>
+          <div><div class="k">Floor</div>${escapeHtml(b.floor_number)}</div>
+          <div><div class="k">Booked</div>${escapeHtml(b.created_at)}</div>
+        </div>
+
+        <div class="imgs">
+          <a href="${b.railing_image}" target="_blank">Railing Photo →</a>
+          <a href="${b.view_image}" target="_blank">View Photo →</a>
+        </div>
+
+        <div class="control-row">
+          <div class="field">
+            <label>Status</label>
+            <select id="status-${b.booking_id}">
+              ${STATUSES.map(s => `<option value="${s}" ${s === b.status ? 'selected' : ''}>${s}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>Price Charged (₹)</label>
+            <input type="number" id="price-${b.booking_id}" value="${b.price_charged ?? ''}" placeholder="e.g. 42000">
+          </div>
+          <div class="field">
+            <label>Advance Taken (₹)</label>
+            <input type="number" id="advance-${b.booking_id}" value="${b.advance_amount ?? ''}" placeholder="e.g. 16800">
+          </div>
+          <button class="save-btn" onclick="saveBooking(${b.booking_id})">Save</button>
+          <button class="del-btn" onclick="deleteClient(${b.user_id}, '${escapeHtml(b.client_name)}')">Delete Client</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function saveBooking(bookingId) {
+    const status = document.getElementById(`status-${bookingId}`).value;
+    const price = document.getElementById(`price-${bookingId}`).value;
+    const advance = document.getElementById(`advance-${bookingId}`).value;
+
+    try {
+      await fetch(`${API_BASE}/admin/booking/${bookingId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ status })
+      });
+      await fetch(`${API_BASE}/admin/booking/${bookingId}/pricing`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ price_charged: price, advance_amount: advance })
+      });
+      checkAdminAccess(); // refresh
+    } catch (e) {
+      alert("Failed to save changes.");
+    }
+  }
+
+  async function deleteClient(userId, name) {
+    if (!confirm(`Delete ${name} and all their booking data? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/admin/user/${userId}`, {
+        method: "DELETE",
+        headers: authHeaders()
+      });
+      if (res.ok) { checkAdminAccess(); }
+      else { alert("Failed to delete client."); }
+    } catch (e) {
+      alert("Network error while deleting.");
+    }
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return "";
+    return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  }
+
+  // Init
+  checkAdminAccess();
+</script>
+</body>
+</html>
