@@ -364,11 +364,13 @@ def create_booking():
 # ==========================================
 # ROUTE 4: ADMIN DASHBOARD CONTROL
 # ==========================================
+# Fixed: Matching the statuses exactly to the frontend array in admin.html
 VALID_STATUSES = [
-    "Site Inspection Remaining",
+    "Inspection Fee Paid",
+    "Inspection Scheduled",
     "Advance Paid",
-    "Setup Done",
-    "Full Payment Paid"
+    "Installation Pending",
+    "Installation Completed"
 ]
 
 @app.route("/api/admin/bookings", methods=["GET"])
@@ -381,6 +383,7 @@ def get_all_bookings():
         user = User.query.get(b.user_id)
         results.append({
             "booking_id": b.id,
+            "user_id": b.user_id,
             "client_name": user.name if user else "N/A",
             "client_email": user.email if user else "N/A",
             "client_phone": user.phone if user else "N/A",
@@ -391,11 +394,12 @@ def get_all_bookings():
             "railing_image": b.railing_image_url,
             "view_image": b.view_image_url,
             "status": b.status,
+            "price_charged": float(b.price_charged) if b.price_charged is not None else "",
+            "advance_amount": float(b.advance_amount) if b.advance_amount is not None else "",
             "created_at": b.created_at.strftime("%Y-%m-%d %H:%M")
         })
         
     return jsonify({"bookings": results}), 200
-
 
 @app.route("/api/admin/booking/<int:booking_id>/status", methods=["PATCH"])
 @admin_required
@@ -414,6 +418,41 @@ def update_status(booking_id):
     db.session.commit()
     
     return jsonify({"message": "Status updated successfully", "new_status": booking.status}), 200
+
+# NEW ROUTE: Handles saving the Price and Advance inputs from admin.html
+@app.route("/api/admin/booking/<int:booking_id>/pricing", methods=["PATCH"])
+@admin_required
+def update_pricing(booking_id):
+    data = request.json or {}
+    price = data.get("price_charged")
+    advance = data.get("advance_amount")
+    
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking record not found"}), 404
+        
+    # Allows empty strings to clear out the database fields if necessary
+    booking.price_charged = price if price not in ["", None] else None
+    booking.advance_amount = advance if advance not in ["", None] else None
+    
+    db.session.commit()
+    return jsonify({"message": "Pricing updated successfully"}), 200
+
+# NEW ROUTE: Handles deleting a client and their bookings from admin.html
+@app.route("/api/admin/user/<int:user_id>", methods=["DELETE"])
+@admin_required
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User record not found"}), 404
+        
+    # Foreign Key safety: Must delete associated bookings before deleting the user
+    Booking.query.filter_by(user_id=user.id).delete()
+    db.session.delete(user)
+    db.session.commit()
+    
+    return jsonify({"message": "User and bookings successfully deleted"}), 200
+
 
 # ==========================================
 # ROUTE: CREATE RAZORPAY ORDER

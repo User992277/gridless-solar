@@ -36,7 +36,7 @@ class Booking(db.Model):
     balcony_length = db.Column(db.String(50), nullable=False)
     floor_number = db.Column(db.String(20), nullable=False)
     has_plug = db.Column(db.Boolean, default=True)
-    selected_kit = db.Column(db.String(50), nullable=False) # 'Bill Reducer' or 'Blackout Backup'
+    selected_kit = db.Column(db.String(50), nullable=False)
     
     # Site Inspection Address Details
     full_address = db.Column(db.Text, nullable=False)
@@ -47,6 +47,10 @@ class Booking(db.Model):
     view_image_url = db.Column(db.String(300), nullable=False)
     
     # Workflow Status
-    # Statuses: "Site Inspection Remaining", "Advance Paid", "Setup Done", "Full Payment Paid"
     status = db.Column(db.String(50), default="Site Inspection Remaining")
+    
+    # New Pricing Columns mapped from your SQL commands
+    price_charged = db.Column(db.Numeric(10, 2), nullable=True)
+    advance_amount = db.Column(db.Numeric(10, 2), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
