@@ -191,9 +191,19 @@ def send_otp():
             return jsonify({"error": "NO_BOOKING", "message": "No account found."}), 404
             
         # 2. Check if user actually has a recorded booking
+        # 2. Check if user actually has a recorded booking
         booking = Booking.query.filter_by(user_id=user.id).first()
         if not booking:
             return jsonify({"error": "NO_BOOKING", "message": "No active booking found."}), 404
+
+    elif intent == "admin":
+        # Only pre-approved admin accounts may trigger an OTP send here —
+        # this guards the Brevo daily quota from abuse on the public admin page.
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.is_admin:
+            return jsonify({"error": "NOT_ADMIN", "message": "This email is not authorized for admin access."}), 403
+
+    # --- Proceed to Generate & Send OTP ---
 
     # --- Proceed to Generate & Send OTP ---
     otp_code = str(random.randint(100000, 999999))
